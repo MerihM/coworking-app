@@ -1,0 +1,29 @@
+# Top-most EditorConfig file – don't look in parent folders
+root = true
+
+# Defaults for every file
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# C# files: 4 spaces (standard .NET style)
+[*.cs]
+indent_size = 4
+# Prefer "namespace Foo;" over "namespace Foo { ... }" – one less indent level
+csharp_style_namespace_declarations = file_scoped:warning
+# "var" is fine when the type is obvious from the right-hand side
+csharp_style_var_when_type_is_apparent = true:suggestion
+# "using System..." directives first, then the rest alphabetically
+dotnet_sort_system_directives_first = true
+
+# Project / solution files (XML)
+[*.{csproj,props,targets,slnx}]
+indent_size = 2
+
+# Markdown: trailing double-space is a line break, so keep it
+[*.md]
+trim_trailing_whitespace = false
