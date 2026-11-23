@@ -1,0 +1,57 @@
+# =====================================================================
+# Docker Compose – local development environment for Coworking App.
+#
+# Usage (from the repo root):
+#   docker compose up -d      start in the background
+#   docker compose ps         status (wait for "healthy")
+#   docker compose logs -f db follow database logs
+#   docker compose down       stop and remove the container (data is KEPT)
+# =====================================================================
+
+# Project name. Docker prefixes containers/volumes with it (e.g. coworking_pgdata).
+name: coworking
+
+services:
+  db:
+    # Official PostgreSQL 18 image, Alpine variant (small download).
+    # Pinned to major version 18: minor updates (18.x) are safe, 19 is not used yet.
+    image: postgres:18-alpine
+    container_name: coworking-db
+
+    # Restart after a crash or Docker restart, unless we stopped it ourselves.
+    restart: unless-stopped
+
+    # Values come from the .env file next to this file (Compose reads it automatically).
+    # The ":?" syntax makes Compose stop with an error message if a variable is missing,
+    # instead of silently starting a database with an empty password.
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is not set - copy .env.example to .env}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is not set - copy .env.example to .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set - copy .env.example to .env}
+
+    # "host_ip:host_port:container_port"
+    # Bound to 127.0.0.1 so the DB is reachable only from this machine
+    # (the design document requires the DB server not to be publicly reachable, NFR01).
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+
+    # Named volume for the database files.
+    # NOTE: PostgreSQL 18+ images use /var/lib/postgresql as the mount point
+    # (data goes to /var/lib/postgresql/18/docker). Older tutorials use
+    # /var/lib/postgresql/data, which is wrong for PG 18 and makes the container fail.
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+    # Docker marks the container "healthy" only when Postgres accepts connections.
+    # "$$" escapes "$" so the variable is expanded INSIDE the container, not by Compose.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+# Named volumes are managed by Docker and survive `docker compose down`.
+# They are deleted only with `docker compose down -v` (careful: this deletes all data!).
+volumes:
+  pgdata:
