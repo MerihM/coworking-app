@@ -72,7 +72,7 @@ jobs:
       - name: Test
         run: >
           dotnet test --no-build --configuration Release
-          --logger "trx;LogFileName=test-results.trx"
+          --logger trx
           --results-directory TestResults
 
       # 6) Keep test results as a downloadable file, even when tests fail
