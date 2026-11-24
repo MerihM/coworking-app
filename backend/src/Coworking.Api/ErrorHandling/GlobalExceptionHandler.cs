@@ -1,4 +1,5 @@
 using Coworking.Application.Common.Exceptions;
+using Coworking.Domain.Common;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -91,6 +92,14 @@ internal sealed class GlobalExceptionHandler(
                 Detail = e.Message,
             },
 
+            // 422: an entity refused the operation (Domain layer's equivalent of BusinessRuleException).
+            DomainException e => new ProblemDetails
+            {
+                Status = StatusCodes.Status422UnprocessableEntity,
+                Title = "A business rule was violated.",
+                Detail = e.Message,
+            },
+
             // 500: a bug. In Development we show the message to speed up debugging;
             // in Production the client gets NO internal details (NFR01).
             // The stack trace is never sent to the client, only written to the log.
@@ -102,8 +111,16 @@ internal sealed class GlobalExceptionHandler(
             },
         };
 
-        // Business rule code (BR01–BR05) becomes an extra JSON field: "ruleCode": "BR04"
-        if (exception is AppException { RuleCode: { } ruleCode })
+        // Business rule code (BR01–BR05) becomes an extra JSON field: "ruleCode": "BR04".
+        // Both Application and Domain exceptions can carry one.
+        var ruleCode = exception switch
+        {
+            AppException e => e.RuleCode,
+            DomainException e => e.RuleCode,
+            _ => null,
+        };
+
+        if (ruleCode is not null)
         {
             problem.Extensions["ruleCode"] = ruleCode;
         }

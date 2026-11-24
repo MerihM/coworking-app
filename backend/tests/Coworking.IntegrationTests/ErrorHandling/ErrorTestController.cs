@@ -1,4 +1,5 @@
 using Coworking.Application.Common.Exceptions;
+using Coworking.Domain.Common;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -49,4 +50,11 @@ public sealed class ErrorTestController : ControllerBase
     [HttpGet("unexpected")]
     public IActionResult ThrowUnexpected() =>
         throw new InvalidOperationException("Something broke deep inside.");
+
+    [HttpGet("domain-rule")]
+    public IActionResult ThrowDomainRule() =>
+        throw new DomainException(
+            "Members can cancel a reservation at the latest 2 hours before it starts.",
+            "BR03"
+        );
 }
