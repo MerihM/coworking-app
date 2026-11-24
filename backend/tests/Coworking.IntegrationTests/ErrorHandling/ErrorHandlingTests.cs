@@ -19,6 +19,7 @@ public class ErrorHandlingTests(ErrorTestingApiFactory factory)
     [InlineData("/test/errors/conflict", HttpStatusCode.Conflict)]
     [InlineData("/test/errors/business-rule", HttpStatusCode.UnprocessableEntity)]
     [InlineData("/test/errors/forbidden", HttpStatusCode.Forbidden)]
+    [InlineData("/test/errors/domain-rule", HttpStatusCode.UnprocessableEntity)] // AppException_ReturnsMatching...
     public async Task AppException_ReturnsMatchingStatusAsProblemDetails(
         string url,
         HttpStatusCode expectedStatus
@@ -33,6 +34,7 @@ public class ErrorHandlingTests(ErrorTestingApiFactory factory)
     [Theory]
     [InlineData("/test/errors/conflict", "BR01")]
     [InlineData("/test/errors/business-rule", "BR04")]
+    [InlineData("/test/errors/domain-rule", "BR03")] // ExceptionWithRuleCode_...
     public async Task ExceptionWithRuleCode_ReturnsRuleCodeField(
         string url,
         string expectedRuleCode
