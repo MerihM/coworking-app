@@ -1,0 +1,21 @@
+<!--
+  Settings for test projects only.
+  MSBuild stops at the FIRST Directory.Build.props it finds walking up the folders,
+  so we import the parent (backend/Directory.Build.props) explicitly, then override.
+-->
+<Project>
+  <Import
+    Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!--
+      Test classes and methods are public (xUnit requires it), but their names
+      already describe them (e.g. TC03_OverlappingReservation_Returns409),
+      so XML comments are not required here.
+    -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- Test projects are never published as NuGet packages -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>
