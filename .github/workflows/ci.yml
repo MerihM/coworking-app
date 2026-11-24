@@ -1,0 +1,86 @@
+# =====================================================================
+# CI (Continuous Integration) for Coworking App.
+#
+# Runs on every push to main and on every pull request targeting main.
+# Job "backend": restore -> build -> test the .NET solution.
+# CW-8 adds a "frontend" job (lint + build).
+#
+# Each job runs on a fresh GitHub-hosted Ubuntu VM, so a green run proves
+# the project builds from a clean checkout, not only on the developer's machine.
+# =====================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Adds a "Run workflow" button in the Actions tab for manual runs.
+  workflow_dispatch:
+
+# Principle of least privilege: this workflow only needs to read the code.
+permissions:
+  contents: read
+
+# If you push again to the same branch/PR while CI is still running,
+# cancel the old run: only the newest commit matters.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # All "run:" commands execute inside backend/ (where Coworking.slnx is).
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      # Quieter .NET output, no telemetry from CI machines.
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+    steps:
+      # 1) Download the repository into the runner.
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # 2) Install the .NET SDK version required by global.json (10.0.x),
+      #    so CI uses the same SDK family as the developer machine.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      # 3) Download NuGet packages (separate step = clearer error if a package is missing).
+      - name: Restore
+        run: dotnet restore
+
+      # 4) Compile in Release mode. TreatWarningsAsErrors (Directory.Build.props)
+      #    makes any warning, including a missing XML comment, fail the build.
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # 5) Run all tests (unit + integration). Results are saved in TRX format.
+      #    Later, integration tests use Testcontainers: GitHub's Ubuntu runners
+      #    have Docker preinstalled, so they work here without extra setup.
+      - name: Test
+        run: >
+          dotnet test --no-build --configuration Release
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      # 6) Keep test results as a downloadable file, even when tests fail
+      #    (that is exactly when you need them).
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/TestResults
+          retention-days: 14
