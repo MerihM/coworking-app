@@ -24,6 +24,6 @@ public class HealthEndpointTests(WebApplicationFactory<Program> factory)
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Broken", body);
+        Assert.Equal("Healthy", body);
     }
 }
