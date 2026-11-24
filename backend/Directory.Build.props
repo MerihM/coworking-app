@@ -1,0 +1,33 @@
+<!--
+  Directory.Build.props
+  MSBuild imports this file automatically into EVERY project in this folder
+  and its subfolders. Shared settings live here once instead of in each .csproj.
+-->
+<Project>
+  <PropertyGroup>
+    <!-- .NET 10 for all projects -->
+    <TargetFramework>net10.0</TargetFramework>
+
+    <!-- Nullable reference types: the compiler warns when something might be null -->
+    <Nullable>enable</Nullable>
+
+    <!-- Common "using System; using System.Linq; ..." are added automatically -->
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Every warning breaks the build: keeps the code clean from day one -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      Generates the XML documentation file from /// comments.
+      1) Every public type/member WITHOUT a /// comment gives warning CS1591,
+         which is an error together with TreatWarningsAsErrors. This enforces
+         the "thoroughly commented code" requirement of the assignment.
+      2) .NET 10 OpenAPI copies these comments into the API documentation.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Code-style rules from .editorconfig (e.g. file-scoped namespaces) are also checked at build
+    time -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+</Project>
