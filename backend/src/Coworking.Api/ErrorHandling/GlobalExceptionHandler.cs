@@ -1,8 +1,11 @@
+using System.Text.Json;
 using Coworking.Application.Common.Exceptions;
 using Coworking.Domain.Common;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Coworking.Api.ErrorHandling;
 
@@ -22,6 +25,9 @@ internal sealed class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger
 ) : IExceptionHandler
 {
+    /// <summary>Code for a unique-index violation that no service checked first (race condition).</summary>
+    private const string DuplicateCode = "conflict.duplicate";
+
     /// <inheritdoc />
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
@@ -55,13 +61,21 @@ internal sealed class GlobalExceptionHandler(
         ProblemDetails problem = exception switch
         {
             // 400: FluentValidation found invalid input. "errors" lists messages per field:
-            // { "errors": { "Email": ["Email is required."] } }
+            // { "errors": { "email": ["'E-mail' must not be empty."] } }
             ValidationException validation => new HttpValidationProblemDetails(
                 GroupErrors(validation)
             )
             {
                 Status = StatusCodes.Status400BadRequest,
                 Title = "One or more validation errors occurred.",
+            },
+
+            // 401 (CW-11): wrong credentials or an account that no longer works.
+            UnauthorizedException e => new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized.",
+                Detail = e.Message,
             },
 
             ForbiddenException e => new ProblemDetails
@@ -84,6 +98,18 @@ internal sealed class GlobalExceptionHandler(
                 Title = "The request conflicts with the current state.",
                 Detail = e.Message,
             },
+
+            // 409 (CW-11): a UNIQUE index rejected the insert (SqlState 23505), e.g. two people
+            // registered the same e-mail at the same moment and both passed the service's check.
+            // The safety net is the database; this turns its error into a proper 409 instead of 500.
+            DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "The request conflicts with the current state.",
+                    Detail = "This value is already in use.",
+                    Extensions = { ["code"] = DuplicateCode },
+                },
 
             BusinessRuleException e => new ProblemDetails
             {
@@ -125,13 +151,23 @@ internal sealed class GlobalExceptionHandler(
             problem.Extensions["ruleCode"] = ruleCode;
         }
 
+        // CW-11: stable error code for the frontend to translate: "code": "auth.email_taken".
+        if (exception is AppException { Code: { } code })
+        {
+            problem.Extensions["code"] = code;
+        }
+
         return problem;
     }
 
-    /// <summary>Groups FluentValidation failures by property name: { "Email": ["...", "..."] }.</summary>
+    /// <summary>
+    /// Groups FluentValidation failures by property name: { "email": ["...", "..."] }.
+    /// Keys are camelCase (CW-11) so they match the JSON field names the client sent
+    /// ("firstName", not "FirstName"), and the frontend can put each message under its field.
+    /// </summary>
     private static Dictionary<string, string[]> GroupErrors(ValidationException exception) =>
         exception
-            .Errors.GroupBy(failure => failure.PropertyName)
+            .Errors.GroupBy(failure => JsonNamingPolicy.CamelCase.ConvertName(failure.PropertyName))
             .ToDictionary(
                 group => group.Key,
                 group => group.Select(failure => failure.ErrorMessage).ToArray()

@@ -11,7 +11,9 @@
 using System.Diagnostics;
 using Coworking.Api.Auth;
 using Coworking.Api.ErrorHandling;
+using Coworking.Api.Localization;
 using Coworking.Api.OpenApi;
+using Coworking.Api.RateLimiting;
 using Coworking.Application;
 using Coworking.Infrastructure;
 using Coworking.Infrastructure.Persistence;
@@ -71,18 +73,25 @@ try
     // Our handler that maps AppException subtypes to HTTP status codes.
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-    // Application layer: FluentValidation validators (and services in later sprints).
+    // Application layer: FluentValidation validators and use-case services (AuthService, ...).
     builder.Services.AddApplication();
 
-    // Infrastructure layer: EF Core DbContext for PostgreSQL, password hashing and JWT creation.
+    // Infrastructure layer: EF Core DbContext for PostgreSQL, password hashing, JWT and refresh tokens.
     builder.Services.AddInfrastructure();
 
-    // MVC controllers. Feature controllers (Reservations, Memberships, ...) arrive from Sprint 2 on.
-    builder.Services.AddControllers();
+    // MVC controllers.
+    // SuppressImplicitRequiredAttribute...: by default MVC treats every non-nullable string in a
+    // request body as [Required] and answers 400 with its own English message BEFORE our code
+    // runs. We switch that off so FluentValidation is the single place for input rules, and its
+    // messages can be translated (CW-11).
+    builder.Services.AddControllers(options =>
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true
+    );
 
     // Built-in OpenAPI document generator (no Swashbuckle needed in .NET 9+).
     // Because GenerateDocumentationFile=true, /// comments on controllers
     // are copied into the generated document automatically.
+    // The transformer adds the "Bearer" scheme so Scalar can send access tokens (CW-9).
     builder.Services.AddOpenApi(options =>
         options.AddDocumentTransformer<BearerSecuritySchemeTransformer>()
     );
@@ -91,6 +100,9 @@ try
     // what: named policies). Both live in Api/Auth – see ADR 0003.
     builder.Services.AddJwtAuthentication();
     builder.Services.AddAuthorizationPolicies();
+
+    // Brute-force protection for login and registration: 5 attempts per minute per IP (CW-11).
+    builder.Services.AddAuthRateLimiting();
 
     // Health checks: /health returns "Healthy" only when the API is running AND PostgreSQL
     // accepts connections (EF Core's CanConnectAsync). Otherwise "Unhealthy" with HTTP 503.
@@ -121,6 +133,13 @@ try
     // Turns empty error responses (e.g. 404 for an unknown URL) into ProblemDetails JSON.
     app.UseStatusCodePages();
 
+    // Sets the request language (en/bs) from the Accept-Language header, BEFORE anything that
+    // produces text (validation messages). See Localization/LocalizationSetup.cs (CW-11).
+    app.UseApiLocalization();
+
+    // Rejects too many login/register attempts early, before any password hashing work (CW-11).
+    app.UseRateLimiter();
+
     // Reads the "Authorization: Bearer <token>" header and, if the token is valid, fills
     // HttpContext.User with its claims (CW-9). Does not reject anything by itself.
     app.UseAuthentication();
@@ -149,7 +168,7 @@ try
 
     // Routes requests to controller actions ([Route], [HttpGet], ...).
     // RequireAuthorization = secure by default: every controller action needs a valid token
-    // unless it is marked [AllowAnonymous] (e.g. login and register in CW-11). See ADR 0003.
+    // unless it is marked [AllowAnonymous] (e.g. login and register). See ADR 0003.
     app.MapControllers().RequireAuthorization();
 
     app.Run();

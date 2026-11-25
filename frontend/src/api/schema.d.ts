@@ -3,15 +3,364 @@
  * Do not make direct changes to the file.
  */
 
-export type paths = Record<string, never>;
+export interface paths {
+    "/api/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registers a new member and logs them in (FR01).
+         * @description Returns the access token in the body and sets the refresh token cookie.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RegisterMemberRequest"];
+                    "text/json": components["schemas"]["RegisterMemberRequest"];
+                    "application/*+json": components["schemas"]["RegisterMemberRequest"];
+                };
+            };
+            responses: {
+                /** @description Registered and logged in. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                /** @description Invalid input; see "errors". */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description E-mail already used (code auth.email_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too many attempts (code auth.too_many_requests). */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logs in a member or an employee.
+         * @description Returns the access token in the body and sets the refresh token cookie.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LoginRequest"];
+                    "text/json": components["schemas"]["LoginRequest"];
+                    "application/*+json": components["schemas"]["LoginRequest"];
+                };
+            };
+            responses: {
+                /** @description Logged in. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                /** @description E-mail or password missing. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Wrong e-mail/password or deactivated account (code auth.invalid_credentials). */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too many attempts (code auth.too_many_requests). */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchanges the refresh cookie for a new access token (and a new refresh cookie).
+         * @description No body: the browser sends the httpOnly cookie automatically. Called by the frontend on
+         *     page load (silent login) and when an access token expires.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description New session. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                /** @description Cookie missing, expired, revoked or reused (code auth.refresh_invalid); the cookie is deleted. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logs out: revokes the session and deletes the refresh cookie.
+         * @description Anonymous on purpose, so logout also works when the access token has already expired.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Logged out (also when there was no session). */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns the logged-in user, loaded fresh from the database. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The current user. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserResponse"];
+                    };
+                };
+                /** @description No valid access token, or the account was deactivated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+}
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: never;
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    schemas: {
+        /**
+         * @description JSON body returned by register, login and refresh. The refresh token is NOT in here: it travels
+         *     only in the httpOnly cookie, where JavaScript can't read it.
+         */
+        AuthResponse: {
+            /** @description JWT for the `Authorization: Bearer` header. The frontend keeps it in memory only. */
+            accessToken: string;
+            /**
+             * Format: date-time
+             * @description When the access token expires (UTC); the frontend refreshes shortly before.
+             */
+            accessTokenExpiresAt: string;
+            /** @description Who is logged in. */
+            user: components["schemas"]["UserResponse"];
+        };
+        HttpValidationProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number | string;
+            detail?: null | string;
+            instance?: null | string;
+            errors?: {
+                [key: string]: string[];
+            };
+        };
+        /** @description Body of `POST /api/auth/login`. Members and employees use the same form. */
+        LoginRequest: {
+            /** @description E-mail (case and surrounding spaces don't matter). */
+            email: string;
+            /** @description Plain-text password. */
+            password: string;
+        };
+        ProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number | string;
+            detail?: null | string;
+            instance?: null | string;
+        };
+        /** @description Body of `POST /api/auth/register` (FR01: name, surname, e-mail, phone and password). */
+        RegisterMemberRequest: {
+            /** @description First name (ime). */
+            firstName: string;
+            /** @description Last name (prezime). */
+            lastName: string;
+            /** @description E-mail; becomes the login name. */
+            email: string;
+            /** @description Phone number. */
+            phone: string;
+            /** @description Plain-text password; hashed immediately, never stored or logged. */
+            password: string;
+        };
+        /** @description The logged-in user as the frontend sees it (login/register/refresh responses and `GET /api/auth/me`). */
+        UserResponse: {
+            /**
+             * Format: int32
+             * @description Id inside the user's own table.
+             */
+            id: number | string;
+            /** @description `"member"` or `"employee"` (same values as the token claim). */
+            userType: string;
+            /** @description Member, Receptionist, Manager or Administrator – drives navigation and route guards. */
+            role: string;
+            /** @description E-mail (lower case). */
+            email: string;
+            /** @description Display name for the header/user menu. */
+            fullName: string;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

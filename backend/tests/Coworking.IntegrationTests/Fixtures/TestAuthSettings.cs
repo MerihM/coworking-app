@@ -3,7 +3,7 @@ using Coworking.Infrastructure.Auth;
 namespace Coworking.IntegrationTests.Fixtures;
 
 /// <summary>
-/// JWT settings for tests. Every WebApplicationFactory must add <see cref="Values"/> to its
+/// Auth-related settings for tests. Every WebApplicationFactory must add <see cref="Values"/> to its
 /// configuration: the app validates Jwt options at startup, and CI has no user-secrets.
 /// The key below is public on GitHub on purpose – it is only ever used by tests.
 /// </summary>
@@ -19,6 +19,10 @@ public static class TestAuthSettings
         ["Jwt:Issuer"] = Issuer,
         ["Jwt:Audience"] = Audience,
         ["Jwt:SigningKey"] = SigningKey,
+
+        // CW-11: in tests every request comes from the same (empty) IP address, so the real limit
+        // of 5 per minute would make unrelated tests fail with 429. The rate-limit test sets 5 again.
+        ["RateLimiting:AuthPermitLimit"] = "100000",
     };
 
     /// <summary>The same settings as an options object, for creating tokens outside the app.</summary>

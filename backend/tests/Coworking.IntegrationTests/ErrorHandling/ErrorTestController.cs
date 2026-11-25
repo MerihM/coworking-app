@@ -33,6 +33,17 @@ public sealed class ErrorTestController : ControllerBase
             "BR01"
         );
 
+    [HttpGet("conflict-with-code")]
+    public IActionResult ThrowConflictWithCode() =>
+        throw new ConflictException(
+            "An account with this e-mail address already exists.",
+            code: "auth.email_taken"
+        );
+
+    [HttpGet("unauthorized")]
+    public IActionResult ThrowUnauthorized() =>
+        throw new UnauthorizedException("Invalid e-mail or password.", "auth.invalid_credentials");
+
     [HttpGet("business-rule")]
     public IActionResult ThrowBusinessRule() =>
         throw new BusinessRuleException(
@@ -52,6 +63,7 @@ public sealed class ErrorTestController : ControllerBase
                 new("Email", "Email is required."),
                 new("Email", "Email is not a valid e-mail address."),
                 new("Phone", "Phone is required."),
+                new("FirstName", "First name is required."),
             }
         );
 

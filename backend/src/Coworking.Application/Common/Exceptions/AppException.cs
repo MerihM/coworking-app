@@ -13,12 +13,14 @@ namespace Coworking.Application.Common.Exceptions;
 public abstract class AppException : Exception
 {
     /// <summary>Creates an application error.</summary>
-    /// <param name="message">Human-readable description, safe to show to the user.</param>
+    /// <param name="message">Human-readable description (English), safe to show to the user.</param>
     /// <param name="ruleCode">Optional business rule code from the design document (e.g. "BR04").</param>
-    protected AppException(string message, string? ruleCode = null)
+    /// <param name="code">Optional stable error code for the frontend (e.g. "auth.email_taken").</param>
+    protected AppException(string message, string? ruleCode = null, string? code = null)
         : base(message)
     {
         RuleCode = ruleCode;
+        Code = code;
     }
 
     /// <summary>
@@ -26,4 +28,11 @@ public abstract class AppException : Exception
     /// Returned to the client as the "ruleCode" field so the frontend can react to specific rules.
     /// </summary>
     public string? RuleCode { get; }
+
+    /// <summary>
+    /// Stable, machine-readable error code (CW-11), returned as the "code" field. The frontend
+    /// translates it into English or Bosnian; the English message is only a fallback.
+    /// Never change an existing code – the frontend depends on it.
+    /// </summary>
+    public string? Code { get; }
 }

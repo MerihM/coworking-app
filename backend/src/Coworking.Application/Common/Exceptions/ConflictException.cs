@@ -10,6 +10,7 @@ public sealed class ConflictException : AppException
     /// <summary>Creates a conflict error.</summary>
     /// <param name="message">Description of the conflict.</param>
     /// <param name="ruleCode">Optional rule code, e.g. "BR01".</param>
-    public ConflictException(string message, string? ruleCode = null)
-        : base(message, ruleCode) { }
+    /// <param name="code">Optional error code for the frontend, e.g. "auth.email_taken".</param>
+    public ConflictException(string message, string? ruleCode = null, string? code = null)
+        : base(message, ruleCode, code) { }
 }
