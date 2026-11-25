@@ -1,3 +1,4 @@
+using Coworking.Application.Common.Abstractions;
 using Coworking.Infrastructure.Auth;
 using Coworking.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,8 @@ public static class DependencyInjection
     public const string ConnectionStringName = "Coworking";
 
     /// <summary>
-    /// Adds <see cref="CoworkingDbContext"/> with PostgreSQL (Npgsql) and snake_case naming.
+    /// Adds <see cref="CoworkingDbContext"/> with PostgreSQL (Npgsql) and snake_case naming,
+    /// exposes it to Application as <see cref="IAppDbContext"/>, and adds the auth services.
     /// </summary>
     /// <param name="services">The DI service collection.</param>
     /// <returns>The same collection, for chaining.</returns>
@@ -42,7 +44,15 @@ public static class DependencyInjection
                     .UseSnakeCaseNamingConvention();
             }
         );
-        // Password hasher, access token service, JwtOptions (validated at startup), TimeProvider.
+
+        // Application services ask for IAppDbContext. This hands them the SAME scoped
+        // CoworkingDbContext instance the rest of the request uses (not a second one), so
+        // everything in one request shares one unit of work.
+        services.AddScoped<IAppDbContext>(serviceProvider =>
+            serviceProvider.GetRequiredService<CoworkingDbContext>()
+        );
+
+        // Password hasher, access/refresh token services, JwtOptions (validated at startup), TimeProvider.
         services.AddAuthInfrastructure();
 
         return services;

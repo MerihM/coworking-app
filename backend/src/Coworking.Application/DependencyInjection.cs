@@ -1,3 +1,4 @@
+using Coworking.Application.Auth;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +11,7 @@ namespace Coworking.Application;
 /// </summary>
 public static class DependencyInjection
 {
-    /// <summary>Adds Application-layer services (validators now, use-case services in later sprints).</summary>
+    /// <summary>Adds Application-layer services: validators and use-case services.</summary>
     /// <param name="services">The DI service collection.</param>
     /// <returns>The same collection, so calls can be chained.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
@@ -18,6 +19,9 @@ public static class DependencyInjection
         // Finds every AbstractValidator<T> in this assembly and registers it,
         // so new validators work without touching this file.
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+
+        // Use-case services. Scoped = one instance per HTTP request, like the DbContext they use.
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }

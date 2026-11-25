@@ -17,6 +17,7 @@ public class ErrorHandlingTests(ErrorTestingApiFactory factory)
     [Theory]
     [InlineData("/test/errors/not-found", HttpStatusCode.NotFound)]
     [InlineData("/test/errors/conflict", HttpStatusCode.Conflict)]
+    [InlineData("/test/errors/unauthorized", HttpStatusCode.Unauthorized)]
     [InlineData("/test/errors/business-rule", HttpStatusCode.UnprocessableEntity)]
     [InlineData("/test/errors/forbidden", HttpStatusCode.Forbidden)]
     [InlineData("/test/errors/domain-rule", HttpStatusCode.UnprocessableEntity)]
@@ -46,15 +47,36 @@ public class ErrorHandlingTests(ErrorTestingApiFactory factory)
         Assert.Equal(expectedRuleCode, problem.GetProperty("ruleCode").GetString());
     }
 
+    [Theory]
+    [InlineData("/test/errors/conflict-with-code", "auth.email_taken")]
+    [InlineData("/test/errors/unauthorized", "auth.invalid_credentials")]
+    public async Task ExceptionWithCode_ReturnsCodeField(string url, string expectedCode)
+    {
+        var response = await _client.GetAsync(url);
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(expectedCode, problem.GetProperty("code").GetString());
+    }
+
     [Fact]
-    public async Task ValidationException_Returns400WithErrorsPerField()
+    public async Task ExceptionWithoutCode_HasNoCodeField()
+    {
+        var response = await _client.GetAsync("/test/errors/not-found");
+
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(problem.TryGetProperty("code", out _));
+    }
+
+    [Fact]
+    public async Task ValidationException_Returns400WithCamelCaseErrorsPerField()
     {
         var response = await _client.GetAsync("/test/errors/validation");
 
         var problem = await AssertProblemDetailsAsync(response, HttpStatusCode.BadRequest);
         var errors = problem.GetProperty("errors");
-        Assert.Equal(2, errors.GetProperty("Email").GetArrayLength());
-        Assert.Equal(1, errors.GetProperty("Phone").GetArrayLength());
+        Assert.Equal(2, errors.GetProperty("email").GetArrayLength());
+        Assert.Equal(1, errors.GetProperty("phone").GetArrayLength());
+        Assert.Equal(1, errors.GetProperty("firstName").GetArrayLength());
     }
 
     [Fact]

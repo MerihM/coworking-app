@@ -1,3 +1,4 @@
+using Coworking.Application.Common.Abstractions;
 using Coworking.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,10 +8,12 @@ namespace Coworking.Infrastructure.Persistence;
 /// EF Core session with the coworking_db PostgreSQL database.
 /// One DbSet per table; table mapping details live in Persistence/Configurations
 /// (one IEntityTypeConfiguration class per entity).
+/// Implements <see cref="IAppDbContext"/>, the view of the database that Application services use (CW-11).
 /// </summary>
 /// <param name="options">Provider and connection string, configured in DependencyInjection.AddInfrastructure.</param>
 public sealed class CoworkingDbContext(DbContextOptions<CoworkingDbContext> options)
-    : DbContext(options)
+    : DbContext(options),
+        IAppDbContext
 {
     /// <summary>Members (table members).</summary>
     public DbSet<Member> Members => Set<Member>();
