@@ -10,7 +10,7 @@ namespace Coworking.Api.ErrorHandling;
 /// Catches every exception that escapes a controller or service and turns it into a
 /// ProblemDetails (RFC 7807) JSON response with the correct HTTP status code.
 /// Thanks to this class, controllers and services never need try/catch for error responses:
-/// they simply throw an <see cref="AppException"/> subtype.
+/// they simply throw an <see cref="AppException"/> subtype (or entities throw a <see cref="DomainException"/>).
 /// </summary>
 /// <remarks>
 /// Registered with <c>AddExceptionHandler&lt;GlobalExceptionHandler&gt;()</c> and activated by

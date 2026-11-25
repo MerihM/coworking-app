@@ -4,4 +4,18 @@
     <ProjectReference Include="..\Coworking.Application\Coworking.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.4" />
+  </ItemGroup>
+
+  <!--
+    Shared ASP.NET Core framework: gives Infrastructure IConfiguration and the other
+    Microsoft.Extensions.* types in exactly the same version as the API, with no
+    extra NuGet packages to pin. Infrastructure is only ever used by the API, so this is fine.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
 </Project>

@@ -13,6 +13,8 @@
 using System.Diagnostics;
 using Coworking.Api.ErrorHandling;
 using Coworking.Application;
+using Coworking.Infrastructure;
+using Coworking.Infrastructure.Persistence;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
@@ -71,6 +73,8 @@ try
 
     // Application layer: FluentValidation validators (and services in later sprints).
     builder.Services.AddApplication();
+    // Infrastructure layer: EF Core DbContext for PostgreSQL.
+    builder.Services.AddInfrastructure();
 
     // MVC controllers. Feature controllers (Reservations, Memberships, ...) arrive from Sprint 2 on.
     builder.Services.AddControllers();
@@ -94,9 +98,9 @@ try
         );
     });
 
-    // Health checks: a simple "is the app alive?" endpoint for Docker, CI and the frontend.
-    // CW-7 adds a database check, so /health also reports whether PostgreSQL is reachable.
-    builder.Services.AddHealthChecks();
+    // Health checks: /health returns "Healthy" only when the API is running AND PostgreSQL
+    // accepts connections (EF Core's CanConnectAsync). Otherwise "Unhealthy" with HTTP 503.
+    builder.Services.AddHealthChecks().AddDbContextCheck<CoworkingDbContext>("database");
 
     var app = builder.Build();
 
