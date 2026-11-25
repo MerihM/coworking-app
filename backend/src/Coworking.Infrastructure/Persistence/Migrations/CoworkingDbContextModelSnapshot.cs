@@ -297,6 +297,81 @@ namespace Coworking.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coworking.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("family_id");
+
+                    b.Property<int?>("MemberId")
+                        .HasColumnType("integer")
+                        .HasColumnName("member_id");
+
+                    b.Property<int?>("ReplacedByTokenId")
+                        .HasColumnType("integer")
+                        .HasColumnName("replaced_by_token_id");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("Id")
+                        .HasName("pk_refresh_tokens");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_refresh_tokens_employee_id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_refresh_tokens_expires_at");
+
+                    b.HasIndex("FamilyId")
+                        .HasDatabaseName("ix_refresh_tokens_family_id");
+
+                    b.HasIndex("MemberId")
+                        .HasDatabaseName("ix_refresh_tokens_member_id");
+
+                    b.HasIndex("ReplacedByTokenId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_refresh_tokens_replaced_by_token_id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_refresh_tokens_token_hash");
+
+                    b.ToTable("refresh_tokens", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_refresh_tokens_expires_after_created", "expires_at > created_at");
+
+                            t.HasCheckConstraint("ck_refresh_tokens_hash_length", "octet_length(token_hash) = 32");
+
+                            t.HasCheckConstraint("ck_refresh_tokens_single_owner", "num_nonnulls(member_id, employee_id) = 1");
+                        });
+                });
+
             modelBuilder.Entity("Coworking.Domain.Entities.Reservation", b =>
                 {
                     b.Property<int>("Id")
@@ -496,6 +571,29 @@ namespace Coworking.Infrastructure.Persistence.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Membership");
+                });
+
+            modelBuilder.Entity("Coworking.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Coworking.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_refresh_tokens_employees_employee_id");
+
+                    b.HasOne("Coworking.Domain.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_refresh_tokens_members_member_id");
+
+                    b.HasOne("Coworking.Domain.Entities.RefreshToken", "ReplacedBy")
+                        .WithOne()
+                        .HasForeignKey("Coworking.Domain.Entities.RefreshToken", "ReplacedByTokenId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_refresh_tokens_refresh_tokens_replaced_by_token_id");
+
+                    b.Navigation("ReplacedBy");
                 });
 
             modelBuilder.Entity("Coworking.Domain.Entities.Reservation", b =>

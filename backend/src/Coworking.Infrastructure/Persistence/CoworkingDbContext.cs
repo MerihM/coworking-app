@@ -36,6 +36,9 @@ public sealed class CoworkingDbContext(DbContextOptions<CoworkingDbContext> opti
     /// <summary>Payments (table payments).</summary>
     public DbSet<Payment> Payments => Set<Payment>();
 
+    /// <summary>Hashed refresh tokens of logged-in users (table refresh_tokens, CW-10).</summary>
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     /// <summary>Builds the model: extensions + all entity configurations from this assembly.</summary>
     /// <param name="modelBuilder">EF Core model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
