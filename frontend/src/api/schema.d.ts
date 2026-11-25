@@ -281,6 +281,430 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/employees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists staff accounts, one page at a time, with optional search and filters. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Part of the first name, last name, full name or e-mail (case-insensitive). */
+                    Search?: string;
+                    /** @description Only employees with this role. */
+                    Role?: components["schemas"]["EmployeeRole"];
+                    /** @description true = only active, false = only deactivated. */
+                    IsActive?: boolean;
+                    Page?: number | string;
+                    PageSize?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfEmployeeResponse"];
+                    };
+                };
+                /** @description Invalid paging or filter values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a staff account with an initial password. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateEmployeeRequest"];
+                    "text/json": components["schemas"]["CreateEmployeeRequest"];
+                    "application/*+json": components["schemas"]["CreateEmployeeRequest"];
+                };
+            };
+            responses: {
+                /** @description Created; Location points to the new account. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmployeeResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description E-mail already used (code auth.email_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one staff account. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Employee id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The account. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmployeeResponse"];
+                    };
+                };
+                /** @description No employee with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        /** Changes name, e-mail and role of a staff account. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Employee id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateEmployeeRequest"];
+                    "text/json": components["schemas"]["UpdateEmployeeRequest"];
+                    "application/*+json": components["schemas"]["UpdateEmployeeRequest"];
+                };
+            };
+            responses: {
+                /** @description The updated account. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmployeeResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description No employee with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description E-mail already used (code auth.email_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Own role or last administrator (codes employees.self_change, employees.last_admin). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a staff account that nothing references (otherwise: deactivate it). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Employee id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No employee with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The employee recorded payments (code conflict.in_use) – deactivate instead. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Own account or last administrator. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivates a staff account and ends all its sessions. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Employee id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deactivated (or already inactive). */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No employee with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Own account or last administrator. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activates a deactivated staff account. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Employee id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No employee with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sets a new password and ends all sessions of the account. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Employee id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ResetPasswordRequest"];
+                    "text/json": components["schemas"]["ResetPasswordRequest"];
+                    "application/*+json": components["schemas"]["ResetPasswordRequest"];
+                };
+            };
+            responses: {
+                /** @description Password changed. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The password breaks the policy. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description No employee with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -300,6 +724,42 @@ export interface components {
             /** @description Who is logged in. */
             user: components["schemas"]["UserResponse"];
         };
+        /** @description Body of `POST /api/employees`: a new staff account (FR12, UC14). */
+        CreateEmployeeRequest: {
+            /** @description First name. */
+            firstName: string;
+            /** @description Last name. */
+            lastName: string;
+            /** @description Login e-mail; must not be used by any member or employee. */
+            email: string;
+            /** @description Receptionist, Manager or Administrator. */
+            role: components["schemas"]["EmployeeRole"];
+            /** @description Initial password (password policy applies). The administrator tells it to the employee. */
+            password: string;
+        };
+        /** @description A staff account as shown in the administrator's list and edit form. Never contains the password hash. */
+        EmployeeResponse: {
+            /**
+             * Format: int32
+             * @description Employee id.
+             */
+            id: number | string;
+            /** @description First name. */
+            firstName: string;
+            /** @description Last name. */
+            lastName: string;
+            /** @description Login e-mail (lower case). */
+            email: string;
+            /** @description Receptionist, Manager or Administrator (sent as a string, e.g. "Manager"). */
+            role: components["schemas"]["EmployeeRole"];
+            /** @description Deactivated accounts can't log in. */
+            isActive: boolean;
+        };
+        /**
+         * @description Role of an employee; decides which functions they can use (design document: UlogaZaposlenika).
+         * @enum {unknown}
+         */
+        EmployeeRole: "Receptionist" | "Manager" | "Administrator";
         HttpValidationProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -317,6 +777,31 @@ export interface components {
             email: string;
             /** @description Plain-text password. */
             password: string;
+        };
+        /** @description One page of a list plus what the frontend needs to draw the pager. */
+        PagedResultOfEmployeeResponse: {
+            /** @description The items on this page (may be empty). */
+            items: components["schemas"]["EmployeeResponse"][];
+            /**
+             * Format: int32
+             * @description This page's number (1-based).
+             */
+            page: number | string;
+            /**
+             * Format: int32
+             * @description Requested items per page.
+             */
+            pageSize: number | string;
+            /**
+             * Format: int32
+             * @description Number of items on ALL pages that match the filters.
+             */
+            totalCount: number | string;
+            /**
+             * Format: int32
+             * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
+             */
+            totalPages?: number | string;
         };
         ProblemDetails: {
             type?: null | string;
@@ -338,6 +823,25 @@ export interface components {
             phone: string;
             /** @description Plain-text password; hashed immediately, never stored or logged. */
             password: string;
+        };
+        /** @description Body of `POST /api/employees/{id}/reset-password`. */
+        ResetPasswordRequest: {
+            /** @description The new password (password policy applies). */
+            newPassword: string;
+        };
+        /**
+         * @description Body of `PUT /api/employees/{id}`. PUT = the client sends the whole editable state; every
+         *     field is required. The password is NOT here – it has its own reset endpoint.
+         */
+        UpdateEmployeeRequest: {
+            /** @description First name. */
+            firstName: string;
+            /** @description Last name. */
+            lastName: string;
+            /** @description Login e-mail. */
+            email: string;
+            /** @description New role (an administrator can't change their own). */
+            role: components["schemas"]["EmployeeRole"];
         };
         /** @description The logged-in user as the frontend sees it (login/register/refresh responses and `GET /api/auth/me`). */
         UserResponse: {

@@ -28,6 +28,12 @@ internal sealed class GlobalExceptionHandler(
     /// <summary>Code for a unique-index violation that no service checked first (race condition).</summary>
     private const string DuplicateCode = "conflict.duplicate";
 
+    /// <summary>
+    /// Code for a delete that a foreign key blocked: other rows still reference the record (CW-12).
+    /// The frontend suggests deactivating it instead.
+    /// </summary>
+    private const string InUseCode = "conflict.in_use";
+
     /// <inheritdoc />
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
@@ -109,6 +115,27 @@ internal sealed class GlobalExceptionHandler(
                     Title = "The request conflicts with the current state.",
                     Detail = "This value is already in use.",
                     Extensions = { ["code"] = DuplicateCode },
+                },
+
+            // 409 (CW-12): DELETE refused by a foreign key, e.g. an employee who recorded payments.
+            // History must stay, so the row can't go; the client should deactivate it instead.
+            // PostgreSQL uses two codes for this: 23001 (restrict_violation) when the foreign key is
+            // ON DELETE RESTRICT – checked immediately, which is what our EF configurations use – and
+            // 23503 (foreign_key_violation) for the default NO ACTION, checked at the end of the
+            // statement. Both mean the same here. Rooms/workspaces (Sprint 3) reuse this.
+            DbUpdateException
+            {
+                InnerException: PostgresException
+                {
+                    SqlState: PostgresErrorCodes.RestrictViolation or PostgresErrorCodes.ForeignKeyViolation,
+                },
+            } =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "The request conflicts with the current state.",
+                    Detail = "This record is still in use by other data and can't be deleted. Deactivate it instead.",
+                    Extensions = { ["code"] = InUseCode },
                 },
 
             BusinessRuleException e => new ProblemDetails
