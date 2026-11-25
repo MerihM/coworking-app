@@ -1,16 +1,15 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Coworking.IntegrationTests.Fixtures;
 
 namespace Coworking.IntegrationTests;
 
 /// <summary>
-/// Smoke test: the whole API starts in memory and /health answers.
-/// WebApplicationFactory runs the real Program.cs (same services, same pipeline),
-/// but without opening a network port: requests go straight into the in-memory server.
-/// IClassFixture = xUnit creates ONE factory and shares it between all tests in this class.
+/// Smoke test: the whole API starts in memory, connects to PostgreSQL, and /health answers "Healthy".
+/// Uses PostgresApiFactory because the health check includes the database.
+/// IClassFixture = xUnit creates ONE factory (and one database container) and shares it
+/// between all tests in this class.
 /// </summary>
-public class HealthEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class HealthEndpointTests(PostgresApiFactory factory) : IClassFixture<PostgresApiFactory>
 {
     [Fact]
     public async Task Health_WhenApiIsRunning_ReturnsOkAndHealthy()
