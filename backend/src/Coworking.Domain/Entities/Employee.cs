@@ -70,6 +70,18 @@ public class Employee : Entity
         LastName = lastName.Trim();
     }
 
+    /// <summary>
+    /// Changes the login e-mail (FR12, administrator edits a staff account). Stored trimmed and in
+    /// lower case, like in the constructor. Uniqueness across members and employees is checked by
+    /// the service before calling this; the unique index on employees.email is the safety net.
+    /// </summary>
+    /// <param name="email">The new e-mail.</param>
+    public void ChangeEmail(string email)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        Email = email.Trim().ToLowerInvariant();
+    }
+
     /// <summary>Assigns a different role (FR12).</summary>
     /// <param name="role">The new role.</param>
     public void ChangeRole(EmployeeRole role) => Role = role;

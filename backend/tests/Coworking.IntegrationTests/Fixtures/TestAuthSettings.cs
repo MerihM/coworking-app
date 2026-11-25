@@ -3,7 +3,7 @@ using Coworking.Infrastructure.Auth;
 namespace Coworking.IntegrationTests.Fixtures;
 
 /// <summary>
-/// Auth-related settings for tests. Every WebApplicationFactory must add <see cref="Values"/> to its
+/// Auth-related settings for tests (JWT, rate limit, admin seeding). Every WebApplicationFactory must add <see cref="Values"/> to its
 /// configuration: the app validates Jwt options at startup, and CI has no user-secrets.
 /// The key below is public on GitHub on purpose – it is only ever used by tests.
 /// </summary>
@@ -23,6 +23,13 @@ public static class TestAuthSettings
         // CW-11: in tests every request comes from the same (empty) IP address, so the real limit
         // of 5 per minute would make unrelated tests fail with 429. The rate-limit test sets 5 again.
         ["RateLimiting:AuthPermitLimit"] = "100000",
+
+        // CW-12: switch administrator seeding OFF in tests, even if the developer has Seed:Admin in
+        // user-secrets (tests run in the Development environment, which loads user-secrets).
+        // Otherwise the app would try to seed before Testcontainers has migrated the database, or
+        // seed into the local development database. AdminSeederTests call the seeder directly.
+        ["Seed:Admin:Email"] = "",
+        ["Seed:Admin:Password"] = "",
     };
 
     /// <summary>The same settings as an options object, for creating tokens outside the app.</summary>

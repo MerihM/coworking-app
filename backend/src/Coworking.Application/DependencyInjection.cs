@@ -1,4 +1,5 @@
 using Coworking.Application.Auth;
+using Coworking.Application.Employees;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,6 +23,7 @@ public static class DependencyInjection
 
         // Use-case services. Scoped = one instance per HTTP request, like the DbContext they use.
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
 
         return services;
     }

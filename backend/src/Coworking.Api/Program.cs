@@ -9,6 +9,7 @@
 // =====================================================================
 
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 using Coworking.Api.Auth;
 using Coworking.Api.ErrorHandling;
 using Coworking.Api.Localization;
@@ -17,6 +18,7 @@ using Coworking.Api.RateLimiting;
 using Coworking.Application;
 using Coworking.Infrastructure;
 using Coworking.Infrastructure.Persistence;
+using Coworking.Infrastructure.Seeding;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
@@ -84,8 +86,20 @@ try
     // request body as [Required] and answers 400 with its own English message BEFORE our code
     // runs. We switch that off so FluentValidation is the single place for input rules, and its
     // messages can be translated (CW-11).
-    builder.Services.AddControllers(options =>
-        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true
+    builder
+        .Services.AddControllers(options =>
+            options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true
+        )
+        // Enums travel as their NAMES in JSON ("Manager"), not as numbers (1) – in both directions.
+        // Readable for humans, and reordering an enum can't silently change what a number means (CW-12).
+        .AddJsonOptions(options =>
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter())
+        );
+
+    // The OpenAPI generator reads the "minimal API" JSON options, not MVC's, so the converter is
+    // registered there too. Then the generated TypeScript types say role: "Receptionist" | "Manager" | ...
+    builder.Services.ConfigureHttpJsonOptions(options =>
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter())
     );
 
     // Built-in OpenAPI document generator (no Swashbuckle needed in .NET 9+).
@@ -109,6 +123,10 @@ try
     builder.Services.AddHealthChecks().AddDbContextCheck<CoworkingDbContext>("database");
 
     var app = builder.Build();
+
+    // Creates the first administrator from Seed:Admin (user-secrets) if no active administrator
+    // exists yet (CW-12). Does nothing – and doesn't touch the database – when Seed:Admin is not set.
+    await app.Services.SeedAdministratorAsync();
 
     // -----------------------------------------------------------------
     // 2) HTTP PIPELINE  (order matters: requests pass through top to bottom,
@@ -171,7 +189,7 @@ try
     // unless it is marked [AllowAnonymous] (e.g. login and register). See ADR 0003.
     app.MapControllers().RequireAuthorization();
 
-    app.Run();
+    await app.RunAsync();
 }
 // HostAbortedException is thrown on purpose by tools such as "dotnet ef" (CW-7):
 // they start Program only to read the configuration and then stop it. That is not a crash.
