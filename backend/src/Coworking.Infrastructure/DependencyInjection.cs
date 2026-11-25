@@ -1,3 +1,4 @@
+using Coworking.Infrastructure.Auth;
 using Coworking.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -5,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Coworking.Infrastructure;
 
-/// <summary>Registers the Infrastructure layer (database access) in the DI container.</summary>
+/// <summary>Registers the Infrastructure layer (database access, password hashing, JWT creation) in the DI container.</summary>
 public static class DependencyInjection
 {
     /// <summary>Name of the connection string: configuration key "ConnectionStrings:Coworking".</summary>
@@ -41,6 +42,8 @@ public static class DependencyInjection
                     .UseSnakeCaseNamingConvention();
             }
         );
+        // Password hasher, access token service, JwtOptions (validated at startup), TimeProvider.
+        services.AddAuthInfrastructure();
 
         return services;
     }

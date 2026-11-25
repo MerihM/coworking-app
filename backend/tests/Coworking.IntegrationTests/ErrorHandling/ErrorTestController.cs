@@ -2,6 +2,7 @@ using Coworking.Application.Common.Exceptions;
 using Coworking.Domain.Common;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coworking.IntegrationTests.ErrorHandling;
@@ -11,7 +12,14 @@ namespace Coworking.IntegrationTests.ErrorHandling;
 /// how GlobalExceptionHandler maps it. Lives in the TEST assembly, so it never exists in
 /// the real API; ErrorTestingApiFactory plugs it in only for these tests.
 /// </summary>
+/// <remarks>
+/// [AllowAnonymous] (CW-9): Program.cs protects every controller with
+/// MapControllers().RequireAuthorization(). Without this attribute every request here would be
+/// rejected with 401 before the action runs, so the error-mapping tests would never reach the
+/// exceptions they are testing. These tests are about error handling, not about login.
+/// </remarks>
 [ApiController]
+[AllowAnonymous]
 [Route("test/errors")]
 public sealed class ErrorTestController : ControllerBase
 {

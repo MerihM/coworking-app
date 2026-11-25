@@ -35,16 +35,21 @@ public sealed class PostgresApiFactory : WebApplicationFactory<Program>, IAsyncL
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Added LAST, so it overrides the developer's user-secrets connection string:
-        // tests never touch the local coworking_db.
+        // Added LAST, so these values override the developer's user-secrets:
+        // tests never touch the local coworking_db and never depend on a local signing key.
         builder.ConfigureAppConfiguration(
             (_, configuration) =>
+            {
                 configuration.AddInMemoryCollection(
                     new Dictionary<string, string?>
                     {
                         ["ConnectionStrings:Coworking"] = _postgres.GetConnectionString(),
                     }
-                )
+                );
+
+                // CW-9: Jwt settings are validated at startup (CI has no user-secrets).
+                configuration.AddInMemoryCollection(TestAuthSettings.Values);
+            }
         );
     }
 }

@@ -9,7 +9,9 @@
 // =====================================================================
 
 using System.Diagnostics;
+using Coworking.Api.Auth;
 using Coworking.Api.ErrorHandling;
+using Coworking.Api.OpenApi;
 using Coworking.Application;
 using Coworking.Infrastructure;
 using Coworking.Infrastructure.Persistence;
@@ -72,7 +74,7 @@ try
     // Application layer: FluentValidation validators (and services in later sprints).
     builder.Services.AddApplication();
 
-    // Infrastructure layer: EF Core DbContext for PostgreSQL.
+    // Infrastructure layer: EF Core DbContext for PostgreSQL, password hashing and JWT creation.
     builder.Services.AddInfrastructure();
 
     // MVC controllers. Feature controllers (Reservations, Memberships, ...) arrive from Sprint 2 on.
@@ -82,20 +84,13 @@ try
     // Because GenerateDocumentationFile=true, /// comments on controllers
     // are copied into the generated document automatically.
     builder.Services.AddOpenApi(options =>
-    {
-        // A document transformer edits the generated document before it is served.
-        options.AddDocumentTransformer(
-            (document, _, _) =>
-            {
-                document.Info.Title = "Coworking API";
-                document.Info.Version = "v1";
-                document.Info.Description =
-                    "REST API of the coworking center information system: members, memberships, "
-                    + "payments, rooms, workspaces, reservations and reports.";
-                return Task.CompletedTask;
-            }
-        );
-    });
+        options.AddDocumentTransformer<BearerSecuritySchemeTransformer>()
+    );
+
+    // Authentication (who is calling: JWT bearer tokens) and authorization (which role may do
+    // what: named policies). Both live in Api/Auth – see ADR 0003.
+    builder.Services.AddJwtAuthentication();
+    builder.Services.AddAuthorizationPolicies();
 
     // Health checks: /health returns "Healthy" only when the API is running AND PostgreSQL
     // accepts connections (EF Core's CanConnectAsync). Otherwise "Unhealthy" with HTTP 503.
@@ -126,6 +121,14 @@ try
     // Turns empty error responses (e.g. 404 for an unknown URL) into ProblemDetails JSON.
     app.UseStatusCodePages();
 
+    // Reads the "Authorization: Bearer <token>" header and, if the token is valid, fills
+    // HttpContext.User with its claims (CW-9). Does not reject anything by itself.
+    app.UseAuthentication();
+
+    // Checks the endpoint's rules ([Authorize], policies, RequireAuthorization below) against
+    // HttpContext.User: 401 when not logged in, 403 when the role is not allowed (NFR01).
+    app.UseAuthorization();
+
     if (app.Environment.IsDevelopment())
     {
         // OpenAPI JSON document: /openapi/v1.json
@@ -140,11 +143,14 @@ try
     // so HTTPS redirection is configured together with the Docker/Nginx setup in a later sprint.
     // In local development the API runs on plain http://localhost:5080.
 
-    // Returns 200 "Healthy" when all registered health checks pass.
+    // Returns 200 "Healthy" when all registered health checks pass. Public (no token needed),
+    // because Docker and monitoring call it without logging in.
     app.MapHealthChecks("/health");
 
     // Routes requests to controller actions ([Route], [HttpGet], ...).
-    app.MapControllers();
+    // RequireAuthorization = secure by default: every controller action needs a valid token
+    // unless it is marked [AllowAnonymous] (e.g. login and register in CW-11). See ADR 0003.
+    app.MapControllers().RequireAuthorization();
 
     app.Run();
 }
