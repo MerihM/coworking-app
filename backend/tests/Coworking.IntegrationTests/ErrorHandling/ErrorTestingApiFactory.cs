@@ -1,6 +1,8 @@
+using Coworking.IntegrationTests.Fixtures;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Coworking.IntegrationTests.ErrorHandling;
@@ -14,6 +16,13 @@ public sealed class ErrorTestingApiFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // CW-9: the API validates the Jwt settings at startup and refuses to start without a
+        // signing key. Locally user-secrets would provide one, but CI has no user-secrets,
+        // so every factory supplies the shared test settings itself.
+        builder.ConfigureAppConfiguration(
+            (_, configuration) => configuration.AddInMemoryCollection(TestAuthSettings.Values)
+        );
+
         builder.ConfigureTestServices(services =>
             // MVC only discovers controllers in the API assembly by default;
             // this adds the test assembly as an extra "application part".
