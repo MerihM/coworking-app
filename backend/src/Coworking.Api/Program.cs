@@ -6,8 +6,6 @@
 //      dependency-injection (DI) container (builder.Services...).
 //   2) Pipeline: define how each HTTP request flows through
 //      middleware and reaches an endpoint (app.Use.../app.Map...).
-//
-// Later tickets add: the database (CW-7), JWT authentication (Sprint 2).
 // =====================================================================
 
 using System.Diagnostics;
@@ -73,6 +71,7 @@ try
 
     // Application layer: FluentValidation validators (and services in later sprints).
     builder.Services.AddApplication();
+
     // Infrastructure layer: EF Core DbContext for PostgreSQL.
     builder.Services.AddInfrastructure();
 

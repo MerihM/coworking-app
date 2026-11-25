@@ -3,7 +3,7 @@
 #
 # Runs on every push to main and on every pull request targeting main.
 # Job "backend": restore -> build -> test the .NET solution.
-# CW-8 adds a "frontend" job (lint + build).
+# Job "frontend": lint, format check and build of the React app.
 #
 # Each job runs on a fresh GitHub-hosted Ubuntu VM, so a green run proves
 # the project builds from a clean checkout, not only on the developer's machine.
@@ -67,7 +67,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       # 5) Run all tests (unit + integration). Results are saved in TRX format.
-      #    Later, integration tests use Testcontainers: GitHub's Ubuntu runners
+      #    Integration tests use Testcontainers: GitHub's Ubuntu runners
       #    have Docker preinstalled, so they work here without extra setup.
       - name: Test
         run: >
@@ -84,3 +84,41 @@ jobs:
           name: backend-test-results
           path: backend/TestResults
           retention-days: 14
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # All "run:" commands execute inside frontend/ (where package.json is).
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Node version from .nvmrc (26), plus a cache of downloaded npm packages
+      # keyed by package-lock.json, so repeated runs are faster.
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # "npm ci" installs EXACTLY the versions from package-lock.json (reproducible builds),
+      # unlike "npm install", which may update the lock file.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      # tsc type-checks everything (including the generated API types), then Vite builds dist/.
+      - name: Build
+        run: npm run build
