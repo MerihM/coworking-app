@@ -7,12 +7,15 @@ import { createBrowserRouter } from "react-router";
 import { AppLayout } from "../components/AppLayout";
 import { GuestOnly } from "../features/auth/GuestOnly";
 import { RequireAuth } from "../features/auth/RequireAuth";
+import { RequireRole, type RouteHandle } from "../features/auth/RequireRole";
+import { Roles } from "../features/auth/roles";
 import { AccountPage } from "../pages/AccountPage";
 import { ForbiddenPage } from "../pages/ForbiddenPage";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { RegisterPage } from "../pages/RegisterPage";
+import { StaffListPage } from "../pages/admin/StaffListPage";
 
 export const router = createBrowserRouter([
   {
@@ -35,9 +38,13 @@ export const router = createBrowserRouter([
         Component: RequireAuth,
         children: [
           { path: "account", Component: AccountPage },
-          // CW-17 adds, inside RequireAuth:
-          // { Component: RequireRole, handle: { roles: [Roles.Administrator] },
-          //   children: [{ path: "admin/staff", Component: StaffListPage }] },
+
+          // Administrator only (FR12). Other roles are sent to /forbidden.
+          {
+            Component: RequireRole,
+            handle: { roles: [Roles.Administrator] } satisfies RouteHandle,
+            children: [{ path: "admin/staff", Component: StaffListPage }], // CW-17
+          },
         ],
       },
 

@@ -23,7 +23,8 @@ export function renderPage(ui: ReactElement, auth: AuthContextValue = fakeAuth()
   const router = createMemoryRouter([{ path: "*", element: ui }], { initialEntries: [path] });
 
   return render(
-    <MantineProvider>
+    // env="test": no transitions/portals timing tricks, so modals and menus render at once in jsdom.
+    <MantineProvider env="test">
       <AuthContext.Provider value={auth}>
         <RouterProvider router={router} />
       </AuthContext.Provider>

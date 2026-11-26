@@ -4,7 +4,8 @@
 // PasswordRules) so the user gets instant feedback while typing. The backend still checks
 // everything again – the browser can be bypassed, the API can't.
 //
-// The schemas are built with `t`, so messages follow the language switch.
+// The schemas are built with `t`, so messages follow the language switch. The field builders
+// (textField, emailField, passwordField) are shared with the staff forms (CW-17).
 import type { TFunction } from "i18next";
 import { z } from "zod";
 
@@ -20,7 +21,8 @@ export const limits = {
 /** Same regex as RegisterMemberRequestValidator: "+387 61 123 456", "061/123-456", "(033) 123 456". */
 export const phonePattern = /^\+?\(?[0-9][0-9 ()/-]{5,29}$/;
 
-function requiredText(t: TFunction, max: number) {
+/** Required text (spaces around it don't count) with a maximum length. */
+export function textField(t: TFunction, max: number) {
   return z
     .string()
     .trim()
@@ -28,12 +30,13 @@ function requiredText(t: TFunction, max: number) {
     .max(max, { error: t("validation.tooLong", { max }) });
 }
 
-function email(t: TFunction) {
-  return requiredText(t, limits.emailMax).pipe(z.email({ error: t("validation.email") }));
+/** Required, valid e-mail address. */
+export function emailField(t: TFunction) {
+  return textField(t, limits.emailMax).pipe(z.email({ error: t("validation.email") }));
 }
 
 /** Password policy: 8–128 characters, at least one letter (any alphabet, incl. č ć š ž đ) and one digit. */
-function newPassword(t: TFunction) {
+export function passwordField(t: TFunction) {
   return z
     .string()
     .min(limits.passwordMin, { error: t("validation.passwordLength", { min: limits.passwordMin }) })
@@ -45,7 +48,7 @@ function newPassword(t: TFunction) {
 /** Login: only "present" – an old password that breaks today's policy must still work. */
 export function createLoginSchema(t: TFunction) {
   return z.object({
-    email: requiredText(t, limits.emailMax),
+    email: textField(t, limits.emailMax),
     password: z
       .string()
       .min(1, { error: t("validation.required") })
@@ -57,11 +60,11 @@ export function createLoginSchema(t: TFunction) {
 export function createRegisterSchema(t: TFunction) {
   return z
     .object({
-      firstName: requiredText(t, limits.nameMax),
-      lastName: requiredText(t, limits.nameMax),
-      email: email(t),
-      phone: requiredText(t, limits.phoneMax).regex(phonePattern, { error: t("validation.phone") }),
-      password: newPassword(t),
+      firstName: textField(t, limits.nameMax),
+      lastName: textField(t, limits.nameMax),
+      email: emailField(t),
+      phone: textField(t, limits.phoneMax).regex(phonePattern, { error: t("validation.phone") }),
+      password: passwordField(t),
       // Only in the browser: catches typos in the password before it is sent.
       confirmPassword: z.string(),
     })
