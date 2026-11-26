@@ -428,7 +428,7 @@ export function RoomDetailPage() {
               page={workspaces.data.page}
               pageSize={workspaces.data.pageSize}
               totalCount={workspaces.data.totalCount}
-              totalPages={workspaces.data.totalPages}
+              totalPages={Math.ceil(workspaces.data.totalCount / workspaces.data.pageSize)}
               onChange={setPage}
             />
           )}

@@ -268,7 +268,7 @@ export function RoomsListPage() {
               page={data.page}
               pageSize={data.pageSize}
               totalCount={data.totalCount}
-              totalPages={data.totalPages}
+              totalPages={Math.ceil(data.totalCount / data.pageSize)}
               onChange={setPage}
             />
           )}
