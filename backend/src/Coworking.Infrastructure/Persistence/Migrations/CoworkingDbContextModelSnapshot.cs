@@ -464,10 +464,6 @@ namespace Coworking.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_rooms");
 
-                    b.HasIndex("Name")
-                        .IsUnique()
-                        .HasDatabaseName("ix_rooms_name");
-
                     b.ToTable("rooms", (string)null);
                 });
 

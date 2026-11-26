@@ -33,7 +33,11 @@ public class Room : Entity
     /// <summary>Optional description (opis).</summary>
     public string? Description { get; private set; }
 
-    /// <summary>Inactive rooms are hidden from the offer; FR09 asks for deactivation, not deletion.</summary>
+    /// <summary>
+    /// Inactive rooms are hidden from the offer; FR09 asks for deactivation, not deletion.
+    /// Not in the class diagram (only RadnoMjesto has "aktivno") – a documented deviation, see
+    /// docs/NAMING.md. A workspace is offered only if BOTH it and its room are active.
+    /// </summary>
     public bool IsActive { get; private set; }
 
     /// <summary>
@@ -75,18 +79,18 @@ public class Room : Entity
     }
 
     /// <summary>
-    /// Deactivates the room and all its workspaces, so none of them can be reserved.
-    /// The workspaces must be loaded (the service layer takes care of that).
+    /// Takes the whole room out of the offer (FR09). The workspaces' own flags are NOT touched:
+    /// availability search checks "workspace active AND room active", so this hides them all.
     /// </summary>
-    public void Deactivate()
-    {
-        IsActive = false;
-        foreach (var workspace in _workspaces)
-        {
-            workspace.Deactivate();
-        }
-    }
+    /// <remarks>
+    /// Sprint 3 decision. The first version (CW-6) also deactivated every workspace; then
+    /// reactivating the room could not know which workspaces had been inactive BEFORE, so the
+    /// manager had to turn them all on again by hand. Keeping the two flags separate means
+    /// deactivate → activate brings back exactly the previous state, and the workspaces don't
+    /// have to be loaded. Calling it twice is harmless (idempotent).
+    /// </remarks>
+    public void Deactivate() => IsActive = false;
 
-    /// <summary>Activates the room again. Workspaces are reactivated one by one, on purpose.</summary>
+    /// <summary>Puts the room back into the offer; its workspaces keep their own active/inactive state.</summary>
     public void Reactivate() => IsActive = true;
 }
