@@ -705,6 +705,339 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists rooms, one page at a time, sorted by floor and name. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Part of the room name (case-insensitive). */
+                    Search?: string;
+                    /** @description true = only active rooms, false = only deactivated ones. */
+                    IsActive?: boolean;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfRoomResponse"];
+                    };
+                };
+                /** @description Invalid paging or filter values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new, active room. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateRoomRequest"];
+                    "text/json": components["schemas"]["CreateRoomRequest"];
+                    "application/*+json": components["schemas"]["CreateRoomRequest"];
+                };
+            };
+            responses: {
+                /** @description Created; Location points to the new room. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RoomResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Name already used (code rooms.name_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one room with its workspace counts. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Room id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The room. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RoomResponse"];
+                    };
+                };
+                /** @description No room with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        /** Changes name, floor and description of a room. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Room id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateRoomRequest"];
+                    "text/json": components["schemas"]["UpdateRoomRequest"];
+                    "application/*+json": components["schemas"]["UpdateRoomRequest"];
+                };
+            };
+            responses: {
+                /** @description The updated room. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RoomResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description No room with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Name already used (code rooms.name_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a room that has no workspaces (otherwise: deactivate it). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Room id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No room with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The room still has workspaces (code conflict.in_use). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hides the room and all its workspaces from the offer. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Room id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deactivated (or already inactive). */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No room with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Puts a deactivated room back into the offer. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Room id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No room with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -736,6 +1069,18 @@ export interface components {
             role: components["schemas"]["EmployeeRole"];
             /** @description Initial password (password policy applies). The administrator tells it to the employee. */
             password: string;
+        };
+        /** @description Body of `POST /api/rooms`: a new room (FR09, UC11). New rooms are active. */
+        CreateRoomRequest: {
+            /** @description Name, unique in the center (letter case ignored), 2–100 characters. */
+            name: string;
+            /**
+             * Format: int32
+             * @description Floor number, −5 to 100 (0 = ground floor).
+             */
+            floor: number;
+            /** @description Optional description, up to 1000 characters. */
+            description: null | string;
         };
         /** @description A staff account as shown in the administrator's list and edit form. Never contains the password hash. */
         EmployeeResponse: {
@@ -803,6 +1148,31 @@ export interface components {
              */
             totalPages?: number;
         };
+        /** @description One page of a list plus what the frontend needs to draw the pager. */
+        PagedResultOfRoomResponse: {
+            /** @description The items on this page (may be empty). */
+            items: components["schemas"]["RoomResponse"][];
+            /**
+             * Format: int32
+             * @description This page's number (1-based).
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description Requested items per page.
+             */
+            pageSize: number;
+            /**
+             * Format: int32
+             * @description Number of items on ALL pages that match the filters.
+             */
+            totalCount: number;
+            /**
+             * Format: int32
+             * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
+             */
+            totalPages?: number;
+        };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -829,6 +1199,35 @@ export interface components {
             /** @description The new password (password policy applies). */
             newPassword: string;
         };
+        /** @description A room as shown in the manager's list and edit form (FR09). */
+        RoomResponse: {
+            /**
+             * Format: int32
+             * @description Room id.
+             */
+            id: number;
+            /** @description Name, e.g. "Open Space". */
+            name: string;
+            /**
+             * Format: int32
+             * @description Floor number (sprat); 0 = ground floor, negative = basement.
+             */
+            floor: number;
+            /** @description Optional description (opis), null when empty. */
+            description: null | string;
+            /** @description Inactive rooms hide all their workspaces from availability search. */
+            isActive: boolean;
+            /**
+             * Format: int32
+             * @description All workspaces in the room, active or not.
+             */
+            workspaceCount: number;
+            /**
+             * Format: int32
+             * @description Workspaces whose own flag is active (the room's flag is not considered).
+             */
+            activeWorkspaceCount: number;
+        };
         /**
          * @description Body of `PUT /api/employees/{id}`. PUT = the client sends the whole editable state; every
          *     field is required. The password is NOT here – it has its own reset endpoint.
@@ -842,6 +1241,22 @@ export interface components {
             email: string;
             /** @description New role (an administrator can't change their own). */
             role: components["schemas"]["EmployeeRole"];
+        };
+        /**
+         * @description Body of `PUT /api/rooms/{id}`. PUT = the whole editable state; sending
+         *     `description: null` removes the description. The active flag has its own endpoints
+         *     (deactivate/activate), so an edit can't switch it by accident.
+         */
+        UpdateRoomRequest: {
+            /** @description New name (unique, letter case ignored). */
+            name: string;
+            /**
+             * Format: int32
+             * @description New floor.
+             */
+            floor: number;
+            /** @description New description, or null for none. */
+            description: null | string;
         };
         /** @description The logged-in user as the frontend sees it (login/register/refresh responses and `GET /api/auth/me`). */
         UserResponse: {
