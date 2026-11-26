@@ -281,6 +281,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the free workspaces for a local date and time, grouped by room. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Local date, format yyyy-MM-dd. Required; at most 90 days ahead. */
+                    Date?: string;
+                    /** @description Local start time, format HH:mm, in 15-minute steps. Required. */
+                    From?: string;
+                    /** @description Local end time, format HH:mm, in 15-minute steps, after TimeOnly? AvailabilityQuery.From. Required. */
+                    To?: string;
+                    /** @description Only this type: HotDesk, Office or MeetingRoom. FixedDesk is not searchable (assigned, not booked). */
+                    Type?: components["schemas"]["WorkspaceType"];
+                    /** @description Only workspaces for at least this many people (1–50), e.g. a meeting room for 6. */
+                    MinCapacity?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Free workspaces (rooms without free workspaces are left out). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AvailabilityResponse"];
+                    };
+                };
+                /** @description Missing or malformed values, more than 90 days ahead, or type FixedDesk. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Outside working hours or shorter than 1 hour (ruleCode BR04), or the time has passed (code availability.in_past). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too many searches from this address (code auth.too_many_requests). */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/employees": {
         parameters: {
             query?: never;
@@ -1812,6 +1886,77 @@ export interface components {
             accessTokenExpiresAt: string;
             /** @description Who is logged in. */
             user: components["schemas"]["UserResponse"];
+        };
+        /** @description Result of an availability search (FR02, UC02): free workspaces grouped by room. */
+        AvailabilityResponse: {
+            /**
+             * Format: date
+             * @description The searched local date (echo of the query).
+             */
+            date: string;
+            /**
+             * Format: time
+             * @description The searched local start time.
+             */
+            from: string;
+            /**
+             * Format: time
+             * @description The searched local end time.
+             */
+            to: string;
+            /**
+             * Format: date-time
+             * @description The same start as a UTC instant – what a reservation will store (Sprint 5).
+             */
+            startsAt: string;
+            /**
+             * Format: date-time
+             * @description The same end as a UTC instant.
+             */
+            endsAt: string;
+            /**
+             * Format: int32
+             * @description Number of free workspaces over all rooms.
+             */
+            totalFree: number;
+            /** @description Rooms that have at least one free workspace, sorted by floor and name. */
+            rooms: components["schemas"]["AvailableRoom"][];
+        };
+        /** @description A room with its free workspaces. */
+        AvailableRoom: {
+            /**
+             * Format: int32
+             * @description Room id.
+             */
+            id: number;
+            /** @description Room name. */
+            name: string;
+            /**
+             * Format: int32
+             * @description Floor.
+             */
+            floor: number;
+            /** @description Optional description. */
+            description: null | string;
+            /** @description Free workspaces in this room, sorted by code. */
+            workspaces: components["schemas"]["AvailableWorkspace"][];
+        };
+        /** @description One free workspace. */
+        AvailableWorkspace: {
+            /**
+             * Format: int32
+             * @description Workspace id (Sprint 5: the "Reserve" button sends it).
+             */
+            id: number;
+            /** @description Label, e.g. "OS-01". */
+            code: string;
+            /** @description HotDesk, Office or MeetingRoom. */
+            type: components["schemas"]["WorkspaceType"];
+            /**
+             * Format: int32
+             * @description Number of people.
+             */
+            capacity: number;
         };
         /** @description Body of `POST /api/employees`: a new staff account (FR12, UC14). */
         CreateEmployeeRequest: {

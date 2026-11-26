@@ -8,8 +8,13 @@ using Microsoft.Extensions.Options;
 namespace Coworking.Api.RateLimiting;
 
 /// <summary>
-/// Brute-force protection for login and registration (NFR01), using ASP.NET Core's built-in
-/// rate limiter. Endpoints opt in with <c>[EnableRateLimiting(RateLimitingSetup.AuthPolicy)]</c>.
+/// Rate limiting with ASP.NET Core's built-in limiter. Two policies, endpoints opt in with
+/// <c>[EnableRateLimiting(...)]</c>:
+/// <list type="bullet">
+/// <item><see cref="AuthPolicy"/> – brute-force protection for login and registration (NFR01).</item>
+/// <item><see cref="PublicPolicy"/> – a looser limit for anonymous read endpoints (availability search, CW-21).</item>
+/// </list>
+/// Both use their own counter per IP address, so searching never uses up login attempts.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -28,6 +33,9 @@ public static class RateLimitingSetup
 {
     /// <summary>Policy name for login and registration.</summary>
     public const string AuthPolicy = "auth";
+
+    /// <summary>Policy name for anonymous read endpoints (CW-21).</summary>
+    public const string PublicPolicy = "public";
 
     /// <summary>Registers the options and the rate limiter policies.</summary>
     /// <param name="services">The service collection.</param>
@@ -68,6 +76,30 @@ public static class RateLimitingSetup
                 }
             );
 
+            // Same shape for the public endpoints, with their own (higher) limit. A separate
+            // policy = a separate set of counters: 60 searches don't block a login, and vice versa.
+            options.AddPolicy(
+                PublicPolicy,
+                httpContext =>
+                {
+                    var settings = httpContext
+                        .RequestServices.GetRequiredService<IOptions<RateLimitingOptions>>()
+                        .Value;
+
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = settings.PublicPermitLimit,
+                            Window = TimeSpan.FromSeconds(settings.PublicWindowSeconds),
+                            QueueLimit = 0,
+                        }
+                    );
+                }
+            );
+
+            // One 429 writer for both policies. The code stays "auth.too_many_requests" (already
+            // translated in the frontend); its text "too many attempts, wait a moment" fits both.
             options.OnRejected = WriteTooManyRequestsAsync;
         });
 
