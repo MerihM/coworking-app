@@ -1,5 +1,6 @@
 using Coworking.Application.Auth;
 using Coworking.Application.Employees;
+using Coworking.Application.MembershipTypes;
 using Coworking.Application.Rooms;
 using Coworking.Application.Workspaces;
 using FluentValidation;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeService, EmployeeService>();
         services.AddScoped<IRoomService, RoomService>();
         services.AddScoped<IWorkspaceService, WorkspaceService>();
+        services.AddScoped<IMembershipTypeService, MembershipTypeService>();
 
         return services;
     }

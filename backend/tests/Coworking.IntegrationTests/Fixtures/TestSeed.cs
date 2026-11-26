@@ -15,7 +15,7 @@ namespace Coworking.IntegrationTests.Fixtures;
 
 /// <summary>
 /// Builders that put data straight into the test database (no API calls), plus small client
-/// helpers. Shared by the Rooms and Workspaces tests (CW-18/19) and meant for Sprint 4/5 too.
+/// helpers. Shared by the Rooms, Workspaces and MembershipTypes tests (CW-18–20) and meant for Sprint 4/5 too.
 /// </summary>
 /// <remarks>
 /// Every test class shares ONE database, so everything created here gets unique names, codes and
@@ -187,6 +187,56 @@ public static class TestSeed
         db.Reservations.Add(reservation);
         await db.SaveChangesAsync();
         return reservation;
+    }
+
+    /// <summary>Inserts a membership type (CW-20).</summary>
+    /// <param name="factory">A factory with a database.</param>
+    /// <param name="name">Name (unique; use <see cref="UniqueTag"/>).</param>
+    /// <param name="durationDays">Duration in days.</param>
+    /// <param name="price">Price in KM.</param>
+    /// <param name="isActive">false = deactivated right away.</param>
+    public static async Task<MembershipType> SeedMembershipTypeAsync(
+        this PostgresApiFactory factory,
+        string name,
+        int durationDays = 30,
+        decimal price = 120m,
+        bool isActive = true
+    )
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
+
+        var type = new MembershipType(name, durationDays, price);
+        if (!isActive)
+        {
+            type.Deactivate();
+        }
+
+        db.MembershipTypes.Add(type);
+        await db.SaveChangesAsync();
+        return type;
+    }
+
+    /// <summary>
+    /// A new member buys a membership of the given (active) type – Unpaid, like UC03 step 4.
+    /// The membership copies the type's current price and duration.
+    /// </summary>
+    /// <param name="factory">A factory with a database.</param>
+    /// <param name="membershipTypeId">The type to buy.</param>
+    /// <returns>Id of the new membership.</returns>
+    public static async Task<int> SeedMembershipAsync(this PostgresApiFactory factory, int membershipTypeId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var type = await db.MembershipTypes.SingleAsync(t => t.Id == membershipTypeId);
+        var member = NewMember(now);
+        var membership = member.PurchaseMembership(type, now);
+
+        db.Members.Add(member);
+        await db.SaveChangesAsync();
+        return membership.Id;
     }
 
     /// <summary>The <c>code</c> field of a ProblemDetails response.</summary>

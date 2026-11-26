@@ -237,10 +237,6 @@ namespace Coworking.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_membership_types");
 
-                    b.HasIndex("Name")
-                        .IsUnique()
-                        .HasDatabaseName("ix_membership_types_name");
-
                     b.ToTable("membership_types", null, t =>
                         {
                             t.HasCheckConstraint("ck_membership_types_duration", "duration_days > 0");
