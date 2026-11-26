@@ -142,6 +142,11 @@ try
     // exists yet (CW-12). Does nothing – and doesn't touch the database – when Seed:Admin is not set.
     await app.Services.SeedAdministratorAsync();
 
+    // Fills an EMPTY database with the demo center (rooms, workspaces, price list, demo accounts)
+    // when Seed:DemoData is true – only in appsettings.Development.json (CW-22). Each block is
+    // skipped when its table already has data, so restarts never duplicate or resurrect anything.
+    await app.Services.SeedDemoDataAsync();
+
     // -----------------------------------------------------------------
     // 2) HTTP PIPELINE  (order matters: requests pass through top to bottom,
     //    responses come back bottom to top)

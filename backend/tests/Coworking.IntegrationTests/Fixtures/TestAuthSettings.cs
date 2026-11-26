@@ -33,6 +33,13 @@ public static class TestAuthSettings
         // seed into the local development database. AdminSeederTests call the seeder directly.
         ["Seed:Admin:Email"] = "",
         ["Seed:Admin:Password"] = "",
+
+        // CW-22: the same for the demo data. appsettings.Development.json switches it ON, and tests
+        // run in Development – without this every test host would try to seed an unmigrated database
+        // and every test class would start with 35 extra workspaces. DemoDataSeederTests call the
+        // seeder directly.
+        ["Seed:DemoData"] = "false",
+        ["Seed:DemoPassword"] = "",
     };
 
     /// <summary>The same settings as an options object, for creating tokens outside the app.</summary>
