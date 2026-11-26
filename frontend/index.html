@@ -1,10 +1,25 @@
 <!doctype html>
+<!-- lang is updated by src/i18n/index.ts to the language the user picked (en/bs). -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>Coworking</title>
+    <script>
+      // Same job as Mantine's <ColorSchemeScript />: choose light/dark BEFORE React starts, so a
+      // dark-mode user doesn't see a white flash. Mantine stores a manual choice under this key;
+      // without one we follow the operating system (defaultColorScheme="auto" in main.tsx).
+      try {
+        var stored = localStorage.getItem("mantine-color-scheme-value");
+        var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var scheme = stored === "light" || stored === "dark" ? stored : dark ? "dark" : "light";
+        document.documentElement.setAttribute("data-mantine-color-scheme", scheme);
+      } catch (e) {
+        // localStorage can be blocked (private mode); Mantine still applies the scheme on start.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

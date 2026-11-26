@@ -1,21 +1,33 @@
+import { Badge, type MantineColor } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useApiHealth, type ApiHealth } from "./useApiHealth";
 
-const labels: Record<ApiHealth, string> = {
-  checking: "checking…",
-  Healthy: "Healthy",
-  Degraded: "Degraded",
-  Unhealthy: "Unhealthy (database not reachable)",
-  unreachable: "unreachable (is the API running?)",
+/** Translation key for each state. `satisfies` makes TypeScript complain if a state is missing. */
+const labelKeys = {
+  checking: "health.checking",
+  Healthy: "health.healthy",
+  Degraded: "health.degraded",
+  Unhealthy: "health.unhealthy",
+  unreachable: "health.unreachable",
+} as const satisfies Record<ApiHealth, string>;
+
+const colors: Record<ApiHealth, MantineColor> = {
+  checking: "gray",
+  Healthy: "green",
+  Degraded: "yellow",
+  Unhealthy: "red",
+  unreachable: "red",
 };
 
 /** Small badge with the current API status, e.g. "API: Healthy". */
 export function ApiStatus() {
+  const { t } = useTranslation();
   const status = useApiHealth();
 
   return (
     // role="status": screen readers announce the change when the text updates.
-    <p className={`api-status api-status--${status.toLowerCase()}`} role="status">
-      API: {labels[status]}
-    </p>
+    <Badge role="status" color={colors[status]} variant="light" size="lg" tt="none">
+      {t("health.label")}: {t(labelKeys[status])}
+    </Badge>
   );
 }
