@@ -12,6 +12,7 @@ import { ForbiddenPage } from "../pages/ForbiddenPage";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { RegisterPage } from "../pages/RegisterPage";
 
 export const router = createBrowserRouter([
   {
@@ -21,7 +22,13 @@ export const router = createBrowserRouter([
       { index: true, Component: HomePage }, // "/" – everyone
 
       // Only for visitors who are NOT logged in.
-      { Component: GuestOnly, children: [{ path: "login", Component: LoginPage }] },
+      {
+        Component: GuestOnly,
+        children: [
+          { path: "login", Component: LoginPage },
+          { path: "register", Component: RegisterPage }, // FR01
+        ],
+      },
 
       // Only for logged-in users.
       {
