@@ -92,15 +92,28 @@ try
         )
         // Enums travel as their NAMES in JSON ("Manager"), not as numbers (1) – in both directions.
         // Readable for humans, and reordering an enum can't silently change what a number means (CW-12).
+        // NumberHandling.Strict (CW-13): numbers must be real JSON numbers (5, not "5"). The web
+        // default also accepts numbers written as strings, which made the OpenAPI document describe
+        // every int as "integer | string" – and the generated TypeScript types as number | string.
         .AddJsonOptions(options =>
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter())
-        );
+        {
+            options.JsonSerializerOptions.Converters.Add(StrictEnumConverter());
+            options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+        });
 
-    // The OpenAPI generator reads the "minimal API" JSON options, not MVC's, so the converter is
-    // registered there too. Then the generated TypeScript types say role: "Receptionist" | "Manager" | ...
+    // The OpenAPI generator reads the "minimal API" JSON options, not MVC's, so the same settings
+    // are registered there too. Then the generated TypeScript types say role: "Receptionist" | ...
+    // and page: number.
     builder.Services.ConfigureHttpJsonOptions(options =>
-        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter())
-    );
+    {
+        options.SerializerOptions.Converters.Add(StrictEnumConverter());
+        options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+    });
+
+    // allowIntegerValues: false – without it the converter WRITES names but still ACCEPTS numbers
+    // ("role": 2 would silently mean Administrator). Names only, in both directions.
+    static JsonStringEnumConverter StrictEnumConverter() =>
+        new(namingPolicy: null, allowIntegerValues: false);
 
     // Built-in OpenAPI document generator (no Swashbuckle needed in .NET 9+).
     // Because GenerateDocumentationFile=true, /// comments on controllers
