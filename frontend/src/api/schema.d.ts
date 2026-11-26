@@ -298,8 +298,8 @@ export interface paths {
                     Role?: components["schemas"]["EmployeeRole"];
                     /** @description true = only active, false = only deactivated. */
                     IsActive?: boolean;
-                    Page?: number | string;
-                    PageSize?: number | string;
+                    Page?: number;
+                    PageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -743,7 +743,7 @@ export interface components {
              * Format: int32
              * @description Employee id.
              */
-            id: number | string;
+            id: number;
             /** @description First name. */
             firstName: string;
             /** @description Last name. */
@@ -764,7 +764,7 @@ export interface components {
             type?: null | string;
             title?: null | string;
             /** Format: int32 */
-            status?: null | number | string;
+            status?: null | number;
             detail?: null | string;
             instance?: null | string;
             errors?: {
@@ -786,28 +786,28 @@ export interface components {
              * Format: int32
              * @description This page's number (1-based).
              */
-            page: number | string;
+            page: number;
             /**
              * Format: int32
              * @description Requested items per page.
              */
-            pageSize: number | string;
+            pageSize: number;
             /**
              * Format: int32
              * @description Number of items on ALL pages that match the filters.
              */
-            totalCount: number | string;
+            totalCount: number;
             /**
              * Format: int32
              * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
              */
-            totalPages?: number | string;
+            totalPages?: number;
         };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
             /** Format: int32 */
-            status?: null | number | string;
+            status?: null | number;
             detail?: null | string;
             instance?: null | string;
         };
@@ -849,7 +849,7 @@ export interface components {
              * Format: int32
              * @description Id inside the user's own table.
              */
-            id: number | string;
+            id: number;
             /** @description `"member"` or `"employee"` (same values as the token claim). */
             userType: string;
             /** @description Member, Receptionist, Manager or Administrator – drives navigation and route guards. */
