@@ -9,6 +9,7 @@ import { Notifications } from "@mantine/notifications";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router/dom";
+import { AuthProvider } from "./features/auth/AuthProvider";
 import { i18nReady } from "./i18n";
 import { router } from "./routes/router";
 import { theme } from "./theme";
@@ -24,7 +25,10 @@ createRoot(document.getElementById("root")!).render(
     <MantineProvider theme={theme} defaultColorScheme="auto">
       {/* One place on screen where notifications (success/error toasts) appear – used from CW-16. */}
       <Notifications position="top-right" />
-      <RouterProvider router={router} />
+      {/* Session state for the whole app; starts the silent login (CW-15). */}
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </MantineProvider>
   </StrictMode>,
 );

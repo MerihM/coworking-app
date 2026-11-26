@@ -1,29 +1,57 @@
 import { AppShell, Box, Burger, Button, Container, Group, NavLink, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import type { Role } from "../features/auth/roles";
+import { useAuth } from "../features/auth/useAuth";
 import { LanguageSwitch } from "./LanguageSwitch";
+
+type NavItem = {
+  to: string;
+  labelKey: "nav.home" | "nav.account";
+  /** Show only to logged-in users. */
+  requiresAuth?: boolean;
+  /** Show only to these roles (implies requiresAuth). */
+  roles?: readonly Role[];
+};
 
 /**
  * Navigation entries. `labelKey` is a translation key, so the menu follows the language switch.
- * CW-15 filters this list by role (e.g. "Staff" only for administrators).
+ * Hiding a link is only convenience – the route guards and the API enforce the same rules.
  */
-const navItems = [{ to: "/", labelKey: "nav.home" }] as const;
+const navItems: readonly NavItem[] = [
+  { to: "/", labelKey: "nav.home" },
+  { to: "/account", labelKey: "nav.account", requiresAuth: true },
+  // CW-17: { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
+];
 
 /**
  * The frame around every page (NFR03/NFR04: desktop and mobile).
  *
  * - Desktop (≥ 48em, Mantine's "sm" breakpoint): links sit in the header, no side panel.
  * - Mobile: a burger button opens a side panel with the same links; tapping a link closes it.
- *
- * Mantine's AppShell positions header, side panel and main area and handles the breakpoints.
  */
 export function AppLayout() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { status, user, logout } = useAuth();
 
   // opened = mobile side panel visible. useDisclosure gives the boolean plus toggle/close helpers.
   const [opened, { toggle, close }] = useDisclosure();
+
+  const visibleItems = navItems.filter((item) => {
+    if (item.roles) {
+      return user !== null && item.roles.some((role) => role === user.role);
+    }
+    return !item.requiresAuth || status === "authenticated";
+  });
+
+  async function handleLogout() {
+    await logout();
+    close();
+    navigate("/");
+  }
 
   return (
     <AppShell
@@ -53,7 +81,7 @@ export function AppLayout() {
 
             <Box component="nav" visibleFrom="sm">
               <Group gap={4}>
-                {navItems.map((item) => (
+                {visibleItems.map((item) => (
                   <Button
                     key={item.to}
                     component={Link}
@@ -68,13 +96,31 @@ export function AppLayout() {
             </Box>
           </Group>
 
-          {/* CW-16 adds the user menu (login / name + logout) next to the switch. */}
-          <LanguageSwitch />
+          <Group gap="sm" wrap="nowrap">
+            <LanguageSwitch />
+
+            {/* Minimal session controls (CW-15); CW-16 turns this into a user menu. */}
+            {status === "authenticated" && user && (
+              <>
+                <Text size="sm" visibleFrom="sm">
+                  {user.fullName}
+                </Text>
+                <Button size="compact-sm" variant="default" onClick={() => void handleLogout()}>
+                  {t("auth.logout")}
+                </Button>
+              </>
+            )}
+            {status === "anonymous" && (
+              <Button size="compact-sm" component={Link} to="/login">
+                {t("auth.loginLink")}
+              </Button>
+            )}
+          </Group>
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <NavLink
             key={item.to}
             component={Link}
@@ -88,7 +134,7 @@ export function AppLayout() {
 
       <AppShell.Main>
         <Container size="lg">
-          {/* The matched child route (HomePage, NotFoundPage...) renders here. */}
+          {/* The matched child route (HomePage, AccountPage...) renders here. */}
           <Outlet />
         </Container>
       </AppShell.Main>

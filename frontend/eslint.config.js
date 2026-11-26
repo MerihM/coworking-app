@@ -20,5 +20,13 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Tests and test helpers are never hot-reloaded in the browser, so the Fast Refresh rule
+    // ("a .tsx file should only export components") doesn't apply to them (CW-15).
+    files: ["src/test/**", "**/*.test.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
   eslintConfigPrettier,
 ]);
