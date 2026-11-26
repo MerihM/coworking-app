@@ -1,12 +1,18 @@
+import { Group, Stack, Text, Title } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { ApiStatus } from "../features/health/ApiStatus";
 
-/** Start page. For now it only proves that the frontend can reach the API. */
+/** Start page. For now it shows what the app is and whether the frontend can reach the API. */
 export function HomePage() {
+  const { t } = useTranslation();
+
   return (
-    <section>
-      <h1>Coworking center</h1>
-      <p>Workspace reservations, memberships and payments in one place.</p>
-      <ApiStatus />
-    </section>
+    <Stack gap="md">
+      <Title order={1}>{t("home.title")}</Title>
+      <Text c="dimmed">{t("app.tagline")}</Text>
+      <Group>
+        <ApiStatus />
+      </Group>
+    </Stack>
   );
 }
