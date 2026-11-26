@@ -23,6 +23,7 @@ export const en = {
     account: "My account",
     staff: "Staff",
     spaces: "Spaces",
+    membershipTypes: "Membership types",
     openMenu: "Open navigation",
     closeMenu: "Close navigation",
   },
@@ -101,6 +102,7 @@ export const en = {
       "This fixed desk is assigned to a member. Remove the assignment first (member management).",
     roomInactive:
       "This room is deactivated. Activate it before adding or moving workspaces into it.",
+    membershipTypeNameTaken: "Another membership type already has this name.",
     network: "The server can't be reached. Check your connection and try again.",
     server: "Something went wrong on the server. Please try again later.",
     unknown: "Something went wrong. Please try again.",
@@ -346,6 +348,86 @@ export const en = {
       deactivated: "{{code}} was deactivated.",
       activated: "{{code}} was activated.",
       deleted: "{{code}} was deleted.",
+      failed: "The action failed",
+    },
+  },
+  format: {
+    // i18next chooses the suffix with Intl.PluralRules. English never needs _few; it exists
+    // because bs.ts is typed "typeof en" and Bosnian does (2–4: "dana").
+    duration_one: "{{count}} day",
+    duration_few: "{{count}} days",
+    duration_other: "{{count}} days",
+  },
+  membershipTypes: {
+    title: "Membership types",
+    add: "Add membership type",
+    empty: "No membership types match these filters.",
+    loadFailed: "The membership types could not be loaded.",
+    filters: {
+      search: "Search",
+      searchPlaceholder: "Name",
+      status: "Status",
+      all: "All",
+    },
+    columns: {
+      name: "Name",
+      duration: "Duration",
+      price: "Price",
+      sold: "Sold",
+      status: "Status",
+      actions: "Actions",
+    },
+    actions: {
+      menu: "Actions for {{name}}",
+      edit: "Edit",
+      deactivate: "Deactivate",
+      activate: "Activate",
+      delete: "Delete",
+      deleteHint: "This type has already been bought, so it can only be deactivated.",
+    },
+    form: {
+      createTitle: "New membership type",
+      editTitle: "Edit membership type",
+      name: "Name",
+      duration: "Duration (days)",
+      durationHint: "1 = daily, 7 = weekly, 30 = monthly.",
+      price: "Price",
+      create: "Create",
+      // Plural forms: English uses _one/_other; _few exists only because bs.ts must have the same keys.
+      soldHint_one:
+        "{{count}} membership was bought with this type. It keeps its own price and duration; changes apply to new purchases only.",
+      soldHint_few:
+        "{{count}} memberships were bought with this type. They keep their own price and duration; changes apply to new purchases only.",
+      soldHint_other:
+        "{{count}} memberships were bought with this type. They keep their own price and duration; changes apply to new purchases only.",
+    },
+    validation: {
+      price: "Between 0.01 and 10,000.",
+      priceDecimals: "At most 2 decimals (e.g. 15.50).",
+    },
+    confirm: {
+      deactivate: {
+        title: "Deactivate membership type?",
+        message: "{{name}} will no longer be offered. Memberships already bought stay valid.",
+        confirm: "Deactivate",
+      },
+      activate: {
+        title: "Activate membership type?",
+        message: "{{name}} will be offered again.",
+        confirm: "Activate",
+      },
+      delete: {
+        title: "Delete membership type?",
+        message: "{{name}} will be deleted permanently. This can't be undone.",
+        confirm: "Delete",
+      },
+    },
+    notify: {
+      created: "{{name}} was added to the price list.",
+      updated: "{{name}} was saved.",
+      deactivated: "{{name}} is no longer offered.",
+      activated: "{{name}} is offered again.",
+      deleted: "{{name}} was deleted.",
       failed: "The action failed",
     },
   },
