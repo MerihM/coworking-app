@@ -18,6 +18,10 @@ const codeMessageKeys = {
   "conflict.in_use": "errors.inUse",
   "employees.self_change": "errors.selfChange",
   "employees.last_admin": "errors.lastAdmin",
+  "rooms.name_taken": "errors.roomNameTaken",
+  "workspaces.code_taken": "errors.workspaceCodeTaken",
+  "workspaces.fixed_assigned": "errors.fixedDeskAssigned",
+  "workspaces.room_inactive": "errors.roomInactive",
 } as const;
 
 type KnownCode = keyof typeof codeMessageKeys;
