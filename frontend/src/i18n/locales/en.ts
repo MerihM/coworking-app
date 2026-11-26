@@ -20,6 +20,7 @@ export const en = {
   },
   nav: {
     home: "Home",
+    availability: "Find a workspace",
     account: "My account",
     staff: "Staff",
     spaces: "Spaces",
@@ -32,6 +33,12 @@ export const en = {
   },
   home: {
     title: "Coworking center",
+    findWorkspace: "Find a free workspace",
+    register: "Create an account",
+    offerTitle: "Our offer",
+    offerIntro: "Memberships for every rhythm – from a single day to a whole month.",
+    offerEmpty: "No memberships are on offer at the moment.",
+    offerFailed: "The offer could not be loaded.",
   },
   health: {
     label: "API",
@@ -103,6 +110,9 @@ export const en = {
     roomInactive:
       "This room is deactivated. Activate it before adding or moving workspaces into it.",
     membershipTypeNameTaken: "Another membership type already has this name.",
+    outsideWorkingHours:
+      "This time is outside our working hours (Mon–Fri 07:00–22:00, Sat 09:00–17:00, closed on Sunday) or shorter than 1 hour.",
+    inPast: "This time has already passed. Choose a time in the future.",
     network: "The server can't be reached. Check your connection and try again.",
     server: "Something went wrong on the server. Please try again later.",
     unknown: "Something went wrong. Please try again.",
@@ -430,6 +440,33 @@ export const en = {
       deleted: "{{name}} was deleted.",
       failed: "The action failed",
     },
+  },
+  availability: {
+    title: "Find a workspace",
+    intro: "See which desks, offices and meeting rooms are free. No account needed.",
+    hours: "Open Mon–Fri 07:00–22:00 and Sat 09:00–17:00, closed on Sunday. At least 1 hour.",
+    start: "Choose a date and time, then search.",
+    form: {
+      date: "Date",
+      from: "From",
+      to: "To",
+      type: "Type",
+      allTypes: "All types",
+      minCapacity: "At least (people)",
+      minCapacityPlaceholder: "Any size",
+      search: "Search",
+      closed: "No times can be picked on this day (closed or already over). Choose another date.",
+    },
+    // Plural forms: English uses _one/_other; _few exists only because bs.ts must have the same keys.
+    summary_one: "{{count}} free workspace",
+    summary_few: "{{count}} free workspaces",
+    summary_other: "{{count}} free workspaces",
+    period: "{{date}}, {{from}}–{{to}}",
+    capacity_one: "{{count}} person",
+    capacity_few: "{{count}} people",
+    capacity_other: "{{count}} people",
+    empty: "Nothing is free at this time. Try another time or another type.",
+    failed: "The search failed",
   },
   forbidden: {
     title: "Access denied",

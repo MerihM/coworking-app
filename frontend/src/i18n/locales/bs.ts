@@ -18,6 +18,7 @@ export const bs: typeof en = {
   },
   nav: {
     home: "Početna",
+    availability: "Slobodna mjesta",
     account: "Moj račun",
     staff: "Osoblje",
     spaces: "Prostori",
@@ -30,6 +31,12 @@ export const bs: typeof en = {
   },
   home: {
     title: "Coworking centar",
+    findWorkspace: "Pronađi slobodno mjesto",
+    register: "Napravi račun",
+    offerTitle: "Naša ponuda",
+    offerIntro: "Članarine za svaki ritam – od jednog dana do cijelog mjeseca.",
+    offerEmpty: "Trenutno nema članarina u ponudi.",
+    offerFailed: "Ponuda se nije mogla učitati.",
   },
   health: {
     label: "API",
@@ -102,6 +109,9 @@ export const bs: typeof en = {
     roomInactive:
       "Ova prostorija je deaktivirana. Aktivirajte je prije dodavanja ili premještanja radnih mjesta u nju.",
     membershipTypeNameTaken: "Tip članarine s ovim nazivom već postoji.",
+    outsideWorkingHours:
+      "Ovaj termin je izvan radnog vremena (pon–pet 07:00–22:00, sub 09:00–17:00, nedjeljom zatvoreno) ili je kraći od 1 sata.",
+    inPast: "Ovaj termin je već prošao. Odaberite termin u budućnosti.",
     network: "Server nije dostupan. Provjerite vezu i pokušajte ponovo.",
     server: "Došlo je do greške na serveru. Pokušajte ponovo kasnije.",
     unknown: "Nešto nije u redu. Pokušajte ponovo.",
@@ -429,6 +439,36 @@ export const bs: typeof en = {
       deleted: "{{name}} je obrisan.",
       failed: "Akcija nije uspjela",
     },
+  },
+  availability: {
+    title: "Slobodna mjesta",
+    intro:
+      "Pogledajte koja su radna mjesta, kancelarije i sale za sastanke slobodni. Račun nije potreban.",
+    hours:
+      "Radno vrijeme pon–pet 07:00–22:00 i sub 09:00–17:00, nedjeljom zatvoreno. Najmanje 1 sat.",
+    start: "Odaberite datum i vrijeme, pa pokrenite pretragu.",
+    form: {
+      date: "Datum",
+      from: "Od",
+      to: "Do",
+      type: "Tip",
+      allTypes: "Svi tipovi",
+      minCapacity: "Najmanje (osoba)",
+      minCapacityPlaceholder: "Bilo koja veličina",
+      search: "Pretraži",
+      closed:
+        "Za ovaj dan se ne može odabrati termin (zatvoreno ili je prošao). Odaberite drugi datum.",
+    },
+    // 1, 21… slobodno mjesto (_one); 2–4, 22–24… slobodna mjesta (_few); ostalo slobodnih mjesta.
+    summary_one: "{{count}} slobodno mjesto",
+    summary_few: "{{count}} slobodna mjesta",
+    summary_other: "{{count}} slobodnih mjesta",
+    period: "{{date}}, {{from}}–{{to}}",
+    capacity_one: "{{count}} osoba",
+    capacity_few: "{{count}} osobe",
+    capacity_other: "{{count}} osoba",
+    empty: "U ovom terminu ništa nije slobodno. Probajte drugo vrijeme ili drugi tip.",
+    failed: "Pretraga nije uspjela",
   },
   forbidden: {
     title: "Pristup odbijen",

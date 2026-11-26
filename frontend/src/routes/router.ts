@@ -10,6 +10,7 @@ import { RequireAuth } from "../features/auth/RequireAuth";
 import { RequireRole, type RouteHandle } from "../features/auth/RequireRole";
 import { Roles } from "../features/auth/roles";
 import { AccountPage } from "../pages/AccountPage";
+import { AvailabilityPage } from "../pages/AvailabilityPage";
 import { ForbiddenPage } from "../pages/ForbiddenPage";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
@@ -25,7 +26,8 @@ export const router = createBrowserRouter([
     path: "/",
     Component: AppLayout, // shared frame (header, mobile menu); child pages render in its <Outlet />
     children: [
-      { index: true, Component: HomePage }, // "/" – everyone
+      { index: true, Component: HomePage }, // "/" – everyone (offer, CW-25)
+      { path: "availability", Component: AvailabilityPage }, // FR02 – everyone, no login (CW-25)
 
       // Only for visitors who are NOT logged in.
       {
