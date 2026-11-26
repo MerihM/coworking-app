@@ -1,0 +1,32 @@
+// Renders a component with everything the app normally provides around it:
+// Mantine theme, a fake auth state and a router (for <Link>, useSearchParams...).
+import { MantineProvider } from "@mantine/core";
+import { render } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { createMemoryRouter, RouterProvider } from "react-router";
+import type { AuthContextValue } from "../features/auth/authContext";
+import { AuthContext } from "../features/auth/authContext";
+
+export function fakeAuth(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
+  return {
+    status: "anonymous",
+    user: null,
+    login: async () => ({ ok: true }),
+    register: async () => ({ ok: true }),
+    logout: async () => undefined,
+    ...overrides,
+  };
+}
+
+/** Renders `ui` as the page at `path`. */
+export function renderPage(ui: ReactElement, auth: AuthContextValue = fakeAuth(), path = "/") {
+  const router = createMemoryRouter([{ path: "*", element: ui }], { initialEntries: [path] });
+
+  return render(
+    <MantineProvider>
+      <AuthContext.Provider value={auth}>
+        <RouterProvider router={router} />
+      </AuthContext.Provider>
+    </MantineProvider>,
+  );
+}

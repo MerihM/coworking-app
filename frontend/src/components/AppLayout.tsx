@@ -1,10 +1,11 @@
 import { AppShell, Box, Burger, Button, Container, Group, NavLink, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
-import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import type { Role } from "../features/auth/roles";
 import { useAuth } from "../features/auth/useAuth";
 import { LanguageSwitch } from "./LanguageSwitch";
+import { UserMenu } from "./UserMenu";
 
 type NavItem = {
   to: string;
@@ -34,8 +35,7 @@ const navItems: readonly NavItem[] = [
 export function AppLayout() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const { status, user, logout } = useAuth();
+  const { status, user } = useAuth();
 
   // opened = mobile side panel visible. useDisclosure gives the boolean plus toggle/close helpers.
   const [opened, { toggle, close }] = useDisclosure();
@@ -46,12 +46,6 @@ export function AppLayout() {
     }
     return !item.requiresAuth || status === "authenticated";
   });
-
-  async function handleLogout() {
-    await logout();
-    close();
-    navigate("/");
-  }
 
   return (
     <AppShell
@@ -99,22 +93,8 @@ export function AppLayout() {
           <Group gap="sm" wrap="nowrap">
             <LanguageSwitch />
 
-            {/* Minimal session controls (CW-15); CW-16 turns this into a user menu. */}
-            {status === "authenticated" && user && (
-              <>
-                <Text size="sm" visibleFrom="sm">
-                  {user.fullName}
-                </Text>
-                <Button size="compact-sm" variant="default" onClick={() => void handleLogout()}>
-                  {t("auth.logout")}
-                </Button>
-              </>
-            )}
-            {status === "anonymous" && (
-              <Button size="compact-sm" component={Link} to="/login">
-                {t("auth.loginLink")}
-              </Button>
-            )}
+            {/* Log in / Register for visitors, avatar menu for logged-in users (CW-16). */}
+            <UserMenu />
           </Group>
         </Group>
       </AppShell.Header>
