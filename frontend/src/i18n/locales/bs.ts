@@ -7,8 +7,12 @@ export const bs: typeof en = {
     name: "Coworking",
     tagline: "Rezervacije radnih mjesta, članarine i uplate na jednom mjestu.",
   },
+  common: {
+    loading: "Učitavanje…",
+  },
   nav: {
     home: "Početna",
+    account: "Moj račun",
     openMenu: "Otvori navigaciju",
     closeMenu: "Zatvori navigaciju",
   },
@@ -25,6 +29,36 @@ export const bs: typeof en = {
     degraded: "Djelimično ispravan",
     unhealthy: "Neispravan (baza podataka nije dostupna)",
     unreachable: "nedostupan (da li je API pokrenut?)",
+  },
+  auth: {
+    loginLink: "Prijava",
+    logout: "Odjava",
+    login: {
+      title: "Prijava",
+      email: "E-mail",
+      password: "Lozinka",
+      submit: "Prijavi se",
+      failed: "Pogrešan e-mail ili lozinka.",
+      tooMany: "Previše pokušaja. Sačekajte minut i pokušajte ponovo.",
+    },
+  },
+  account: {
+    title: "Moj račun",
+    name: "Ime i prezime",
+    email: "E-mail",
+    role: "Uloga",
+    loadFailed: "Učitavanje računa nije uspjelo.",
+  },
+  roles: {
+    member: "Član",
+    receptionist: "Recepcioner",
+    manager: "Menadžer",
+    administrator: "Administrator",
+  },
+  forbidden: {
+    title: "Pristup odbijen",
+    text: "Vaša uloga ne dozvoljava otvaranje ove stranice.",
+    back: "Nazad na početnu stranicu",
   },
   notFound: {
     title: "Stranica nije pronađena",

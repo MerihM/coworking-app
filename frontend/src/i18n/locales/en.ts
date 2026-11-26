@@ -8,8 +8,12 @@ export const en = {
     name: "Coworking",
     tagline: "Workspace reservations, memberships and payments in one place.",
   },
+  common: {
+    loading: "Loading…",
+  },
   nav: {
     home: "Home",
+    account: "My account",
     openMenu: "Open navigation",
     closeMenu: "Close navigation",
   },
@@ -26,6 +30,36 @@ export const en = {
     degraded: "Degraded",
     unhealthy: "Unhealthy (database not reachable)",
     unreachable: "unreachable (is the API running?)",
+  },
+  auth: {
+    loginLink: "Log in",
+    logout: "Log out",
+    login: {
+      title: "Log in",
+      email: "E-mail",
+      password: "Password",
+      submit: "Log in",
+      failed: "Wrong e-mail or password.",
+      tooMany: "Too many attempts. Wait a minute and try again.",
+    },
+  },
+  account: {
+    title: "My account",
+    name: "Name",
+    email: "E-mail",
+    role: "Role",
+    loadFailed: "Your account could not be loaded.",
+  },
+  roles: {
+    member: "Member",
+    receptionist: "Receptionist",
+    manager: "Manager",
+    administrator: "Administrator",
+  },
+  forbidden: {
+    title: "Access denied",
+    text: "Your role doesn't allow you to open this page.",
+    back: "Back to the start page",
   },
   notFound: {
     title: "Page not found",

@@ -3,7 +3,7 @@
 #
 # Runs on every push to main and on every pull request targeting main.
 # Job "backend": restore -> build -> test the .NET solution.
-# Job "frontend": lint, format check and build of the React app.
+# Job "frontend": lint, format check, unit tests (Vitest) and build of the React app.
 #
 # Each job runs on a fresh GitHub-hosted Ubuntu VM, so a green run proves
 # the project builds from a clean checkout, not only on the developer's machine.
@@ -118,6 +118,11 @@ jobs:
 
       - name: Check formatting
         run: npm run format:check
+
+      # Vitest unit tests (CW-15): auth state, token refresh, route guards.
+      # "--run" = run once and exit (without it Vitest would wait for file changes).
+      - name: Test
+        run: npm test -- --run
 
       # tsc type-checks everything (including the generated API types), then Vite builds dist/.
       - name: Build
