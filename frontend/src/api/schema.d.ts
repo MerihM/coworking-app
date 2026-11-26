@@ -705,6 +705,380 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/membership-types/offer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The public price list: active membership types, shortest first. No login needed.
+         * @description [AllowAnonymous] overrides BOTH the ManagerOnly policy on this class and the app-wide
+         *     RequireAuthorization() from Program.cs (secure by default, CW-9). It is the only way an
+         *     endpoint becomes public, so each one is easy to find with a search.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The offer (may be empty). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipTypeOfferItem"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/membership-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists membership types (active and inactive), one page at a time. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Part of the name (case-insensitive). */
+                    Search?: string;
+                    /** @description true = only offered types, false = only deactivated ones. */
+                    IsActive?: boolean;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfMembershipTypeResponse"];
+                    };
+                };
+                /** @description Invalid paging or filter values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new, active membership type. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateMembershipTypeRequest"];
+                    "text/json": components["schemas"]["CreateMembershipTypeRequest"];
+                    "application/*+json": components["schemas"]["CreateMembershipTypeRequest"];
+                };
+            };
+            responses: {
+                /** @description Created; Location points to the new type. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipTypeResponse"];
+                    };
+                };
+                /** @description Invalid input (e.g. price with three decimals). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Name already used (code membership_types.name_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/membership-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one membership type. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership type id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The membership type. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipTypeResponse"];
+                    };
+                };
+                /** @description No membership type with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        /** Changes name, duration and price. Already bought memberships are not affected. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership type id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateMembershipTypeRequest"];
+                    "text/json": components["schemas"]["UpdateMembershipTypeRequest"];
+                    "application/*+json": components["schemas"]["UpdateMembershipTypeRequest"];
+                };
+            };
+            responses: {
+                /** @description The updated type. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipTypeResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description No membership type with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Name already used (code membership_types.name_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a type nobody has bought (otherwise: deactivate it). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership type id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No membership type with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Memberships of this type exist (code conflict.in_use). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/membership-types/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stops offering the type; bought memberships stay valid. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership type id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deactivated (or already inactive). */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No membership type with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/membership-types/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Offers a deactivated type again. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership type id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No membership type with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rooms": {
         parameters: {
             query?: never;
@@ -1452,6 +1826,21 @@ export interface components {
             /** @description Initial password (password policy applies). The administrator tells it to the employee. */
             password: string;
         };
+        /** @description Body of `POST /api/membership-types`: a new, active type (FR10, UC12). */
+        CreateMembershipTypeRequest: {
+            /** @description Name, unique (letter case ignored), 2–100 characters. */
+            name: string;
+            /**
+             * Format: int32
+             * @description 1–365 days (1 = daily, 7 = weekly, 30 = monthly).
+             */
+            durationDays: number;
+            /**
+             * Format: double
+             * @description 0.01–10 000.00 KM, at most two decimals. Must be a JSON number, not a string.
+             */
+            price: number;
+        };
         /** @description Body of `POST /api/rooms`: a new room (FR09, UC11). New rooms are active. */
         CreateRoomRequest: {
             /** @description Name, unique in the center (letter case ignored), 2–100 characters. */
@@ -1522,10 +1911,86 @@ export interface components {
             /** @description Plain-text password. */
             password: string;
         };
+        /**
+         * @description One entry of the public price list (`GET /api/membership-types/offer`, UC03 step 2):
+         *     only what a visitor needs to see, no status or usage numbers.
+         */
+        MembershipTypeOfferItem: {
+            /**
+             * Format: int32
+             * @description Membership type id (the member picks it when buying, Sprint 4).
+             */
+            id: number;
+            /** @description Name, e.g. "Monthly". */
+            name: string;
+            /**
+             * Format: int32
+             * @description Duration in days.
+             */
+            durationDays: number;
+            /**
+             * Format: double
+             * @description Price in KM (BAM).
+             */
+            price: number;
+        };
+        /** @description A membership type as shown in the manager's list and edit form (FR10). */
+        MembershipTypeResponse: {
+            /**
+             * Format: int32
+             * @description Membership type id.
+             */
+            id: number;
+            /** @description Name, e.g. "Monthly". */
+            name: string;
+            /**
+             * Format: int32
+             * @description How many days a membership of this type lasts.
+             */
+            durationDays: number;
+            /**
+             * Format: double
+             * @description Current price in KM (BAM), two decimals.
+             */
+            price: number;
+            /** @description Inactive types are not offered any more; bought memberships stay valid. */
+            isActive: boolean;
+            /**
+             * Format: int32
+             * @description How many memberships were bought with this type. Greater than 0 = it can't be deleted, only
+             *     deactivated (the UI can disable the delete action up front).
+             */
+            membershipCount: number;
+        };
         /** @description One page of a list plus what the frontend needs to draw the pager. */
         PagedResultOfEmployeeResponse: {
             /** @description The items on this page (may be empty). */
             items: components["schemas"]["EmployeeResponse"][];
+            /**
+             * Format: int32
+             * @description This page's number (1-based).
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description Requested items per page.
+             */
+            pageSize: number;
+            /**
+             * Format: int32
+             * @description Number of items on ALL pages that match the filters.
+             */
+            totalCount: number;
+            /**
+             * Format: int32
+             * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
+             */
+            totalPages?: number;
+        };
+        /** @description One page of a list plus what the frontend needs to draw the pager. */
+        PagedResultOfMembershipTypeResponse: {
+            /** @description The items on this page (may be empty). */
+            items: components["schemas"]["MembershipTypeResponse"][];
             /**
              * Format: int32
              * @description This page's number (1-based).
@@ -1665,6 +2130,25 @@ export interface components {
             email: string;
             /** @description New role (an administrator can't change their own). */
             role: components["schemas"]["EmployeeRole"];
+        };
+        /**
+         * @description Body of `PUT /api/membership-types/{id}`: the whole editable state. A new price or duration
+         *     applies only to memberships bought FROM NOW ON – bought ones keep their own copy (class diagram:
+         *     Clanarina.cijena). The active flag has its own endpoints.
+         */
+        UpdateMembershipTypeRequest: {
+            /** @description New name (unique, letter case ignored). */
+            name: string;
+            /**
+             * Format: int32
+             * @description New duration, 1–365 days.
+             */
+            durationDays: number;
+            /**
+             * Format: double
+             * @description New price, 0.01–10 000.00 KM.
+             */
+            price: number;
         };
         /**
          * @description Body of `PUT /api/rooms/{id}`. PUT = the whole editable state; sending

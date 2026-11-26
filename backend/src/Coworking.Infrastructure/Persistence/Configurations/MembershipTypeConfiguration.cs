@@ -19,6 +19,12 @@ internal sealed class MembershipTypeConfiguration : IEntityTypeConfiguration<Mem
         );
 
         builder.Property(t => t.Name).HasMaxLength(100);
-        builder.HasIndex(t => t.Name).IsUnique();
+
+        // Names are unique WITHOUT regard to letter case ("Monthly" = "monthly", CW-20), same as
+        // room names (CW-18). EF Core can't describe expression indexes, so there is no HasIndex
+        // here: migration MembershipTypeNameCaseInsensitiveUnique creates it with raw SQL:
+        //   CREATE UNIQUE INDEX ux_membership_types_name_lower ON membership_types (lower(name));
+        // MembershipTypeService checks first (409 membership_types.name_taken); the index is the
+        // backstop for two requests at the same moment (23505 → 409 conflict.duplicate).
     }
 }
