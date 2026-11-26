@@ -3,18 +3,16 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Coworking.Application.Auth;
-using Coworking.Application.Common.Abstractions;
 using Coworking.Application.Common.Pagination;
 using Coworking.Application.Rooms;
 using Coworking.Application.Rooms.Dtos;
 using Coworking.Domain.Entities;
-using Coworking.Domain.Enums;
 using Coworking.Infrastructure.Persistence;
 using Coworking.IntegrationTests.Fixtures;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using static Coworking.IntegrationTests.Fixtures.TestSeed;
 
 namespace Coworking.IntegrationTests.Rooms;
 
@@ -25,7 +23,8 @@ namespace Coworking.IntegrationTests.Rooms;
 /// </summary>
 /// <remarks>
 /// The database is shared by the whole class, so every test uses its own unique names/codes
-/// (<see cref="UniqueTag"/>) and never assumes how many rooms exist in total.
+/// (<see cref="TestSeed.UniqueTag"/>) and never assumes how many rooms exist in total.
+/// Seeding and client helpers live in <see cref="TestSeed"/> (moved there in CW-19).
 /// </remarks>
 public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<PostgresApiFactory>
 {
@@ -49,7 +48,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
         HttpResponseMessage response;
         if (role is null)
         {
-            using var anonymous = CreateClient();
+            using var anonymous = factory.CreateHttpsClient();
             response = await anonymous.GetAsync("/api/rooms");
         }
         else
@@ -77,7 +76,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Create_Returns201_WithLocation_AndTrimmedData()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
         var name = $"Lab {UniqueTag()}";
 
         var response = await manager.PostAsJsonAsync(
@@ -98,9 +97,9 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Create_SameNameInOtherLetterCase_Returns409NameTaken()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
         var name = $"Studio {UniqueTag()}";
-        await SeedRoomAsync(name);
+        await factory.SeedRoomAsync(name);
 
         var response = await manager.PostAsJsonAsync(
             "/api/rooms",
@@ -114,7 +113,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Create_InvalidInput_Returns400_WithCamelCaseFieldErrors()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
 
         var response = await manager.PostAsJsonAsync(
             "/api/rooms",
@@ -131,7 +130,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Create_FloorAsString_Returns400()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
 
         // JSON contract (CW-13): numbers must be JSON numbers, "2" is rejected.
         var response = await manager.PostAsync(
@@ -145,9 +144,9 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Create_BosnianLanguage_ReturnsBosnianMessage()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
         var name = $"Soba {UniqueTag()}";
-        await SeedRoomAsync(name);
+        await factory.SeedRoomAsync(name);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/rooms")
         {
@@ -165,11 +164,11 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task List_SearchAndPaging_SortedByFloorThenName()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
         var tag = UniqueTag();
-        await SeedRoomAsync($"{tag} Beta", floor: 2);
-        await SeedRoomAsync($"{tag} Alpha", floor: 2);
-        await SeedRoomAsync($"{tag} Zulu", floor: 1);
+        await factory.SeedRoomAsync($"{tag} Beta", floor: 2);
+        await factory.SeedRoomAsync($"{tag} Alpha", floor: 2);
+        await factory.SeedRoomAsync($"{tag} Zulu", floor: 1);
 
         var page1 = await manager.GetFromJsonAsync<PagedResult<RoomResponse>>(
             $"/api/rooms?search={tag.ToUpperInvariant()}&pageSize=2&page=1"
@@ -187,10 +186,10 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task List_FiltersByStatus()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
         var tag = UniqueTag();
-        await SeedRoomAsync($"{tag} on");
-        await SeedRoomAsync($"{tag} off", isActive: false);
+        await factory.SeedRoomAsync($"{tag} on");
+        await factory.SeedRoomAsync($"{tag} off", isActive: false);
 
         var result = await manager.GetFromJsonAsync<PagedResult<RoomResponse>>(
             $"/api/rooms?search={tag}&isActive=false"
@@ -204,8 +203,8 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Get_ReturnsWorkspaceCounts()
     {
-        var manager = await ManagerClientAsync();
-        var room = await SeedRoomAsync(UniqueTag(), workspaces: 3, inactiveWorkspaces: 1);
+        var manager = await factory.CreateManagerClientAsync();
+        var room = await factory.SeedRoomAsync(UniqueTag(), workspaces: 3, inactiveWorkspaces: 1);
 
         var result = await manager.GetFromJsonAsync<RoomResponse>($"/api/rooms/{room.Id}");
 
@@ -216,7 +215,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Get_UnknownId_Returns404()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
 
         var response = await manager.GetAsync("/api/rooms/999999");
 
@@ -228,8 +227,8 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Update_ChangesAllFields_AndKeepsCounts()
     {
-        var manager = await ManagerClientAsync();
-        var room = await SeedRoomAsync(UniqueTag(), workspaces: 2);
+        var manager = await factory.CreateManagerClientAsync();
+        var room = await factory.SeedRoomAsync(UniqueTag(), workspaces: 2);
         var newName = $"Renamed {UniqueTag()}";
 
         var response = await manager.PutAsJsonAsync(
@@ -248,9 +247,9 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Update_OwnNameInOtherCase_IsAllowed()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
         var name = $"Corner {UniqueTag()}";
-        var room = await SeedRoomAsync(name);
+        var room = await factory.SeedRoomAsync(name);
 
         var response = await manager.PutAsJsonAsync(
             $"/api/rooms/{room.Id}",
@@ -263,9 +262,9 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Update_NameOfAnotherRoom_Returns409NameTaken()
     {
-        var manager = await ManagerClientAsync();
-        var taken = await SeedRoomAsync($"Taken {UniqueTag()}");
-        var room = await SeedRoomAsync(UniqueTag());
+        var manager = await factory.CreateManagerClientAsync();
+        var taken = await factory.SeedRoomAsync($"Taken {UniqueTag()}");
+        var room = await factory.SeedRoomAsync(UniqueTag());
 
         var response = await manager.PutAsJsonAsync(
             $"/api/rooms/{room.Id}",
@@ -279,7 +278,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Update_UnknownId_Returns404()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
 
         var response = await manager.PutAsJsonAsync(
             "/api/rooms/999999",
@@ -294,8 +293,8 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Deactivate_HidesTheRoom_ButKeepsWorkspaceFlags_ThenActivateRestores()
     {
-        var manager = await ManagerClientAsync();
-        var room = await SeedRoomAsync(UniqueTag(), workspaces: 2, inactiveWorkspaces: 1);
+        var manager = await factory.CreateManagerClientAsync();
+        var room = await factory.SeedRoomAsync(UniqueTag(), workspaces: 2, inactiveWorkspaces: 1);
 
         var deactivate = await manager.PostAsync($"/api/rooms/{room.Id}/deactivate", null);
         var afterDeactivate = await manager.GetFromJsonAsync<RoomResponse>($"/api/rooms/{room.Id}");
@@ -314,8 +313,8 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Deactivate_Twice_Returns204BothTimes()
     {
-        var manager = await ManagerClientAsync();
-        var room = await SeedRoomAsync(UniqueTag());
+        var manager = await factory.CreateManagerClientAsync();
+        var room = await factory.SeedRoomAsync(UniqueTag());
 
         var first = await manager.PostAsync($"/api/rooms/{room.Id}/deactivate", null);
         var second = await manager.PostAsync($"/api/rooms/{room.Id}/deactivate", null);
@@ -327,7 +326,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Deactivate_UnknownId_Returns404()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
 
         var response = await manager.PostAsync("/api/rooms/999999/deactivate", null);
 
@@ -339,8 +338,8 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Delete_EmptyRoom_Returns204_ThenGetReturns404()
     {
-        var manager = await ManagerClientAsync();
-        var room = await SeedRoomAsync(UniqueTag());
+        var manager = await factory.CreateManagerClientAsync();
+        var room = await factory.SeedRoomAsync(UniqueTag());
 
         var delete = await manager.DeleteAsync($"/api/rooms/{room.Id}");
         var get = await manager.GetAsync($"/api/rooms/{room.Id}");
@@ -352,8 +351,8 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Delete_RoomWithWorkspaces_Returns409InUse_AndRoomStays()
     {
-        var manager = await ManagerClientAsync();
-        var room = await SeedRoomAsync(UniqueTag(), workspaces: 1);
+        var manager = await factory.CreateManagerClientAsync();
+        var room = await factory.SeedRoomAsync(UniqueTag(), workspaces: 1);
 
         var response = await manager.DeleteAsync($"/api/rooms/{room.Id}");
         var get = await manager.GetAsync($"/api/rooms/{room.Id}");
@@ -366,7 +365,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
     [Fact]
     public async Task Delete_UnknownId_Returns404()
     {
-        var manager = await ManagerClientAsync();
+        var manager = await factory.CreateManagerClientAsync();
 
         var response = await manager.DeleteAsync("/api/rooms/999999");
 
@@ -381,7 +380,7 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
         // Simulates two requests racing past the service check: both rows reach the database.
         // The expression index ux_rooms_name_lower must stop the second one (SqlState 23505).
         var name = $"Race {UniqueTag()}";
-        await SeedRoomAsync(name);
+        await factory.SeedRoomAsync(name);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
@@ -392,68 +391,4 @@ public class RoomsEndpointsTests(PostgresApiFactory factory) : IClassFixture<Pos
         Assert.Equal(PostgresErrorCodes.UniqueViolation, postgres.SqlState);
         Assert.Equal("ux_rooms_name_lower", postgres.ConstraintName);
     }
-
-    // ------------------------------------------------------------------ helpers
-
-    private HttpClient CreateClient() =>
-        factory.CreateClient(
-            new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = false }
-        );
-
-    private static string UniqueTag() => "t" + Guid.NewGuid().ToString("N")[..10];
-
-    /// <summary>A client acting as a fresh Manager. The token comes straight from the app's token service (faster than logging in).</summary>
-    private async Task<HttpClient> ManagerClientAsync()
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
-        var manager = new Employee("Test", "Manager", $"manager-{Guid.NewGuid():N}@example.com", "hash", EmployeeRole.Manager);
-        db.Employees.Add(manager);
-        await db.SaveChangesAsync();
-
-        var token = factory.Services.GetRequiredService<IAccessTokenService>().Create(AuthUser.FromEmployee(manager));
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        return client;
-    }
-
-    /// <summary>
-    /// Inserts a room directly (no API call), optionally with hot desks. The first
-    /// <paramref name="inactiveWorkspaces"/> desks are deactivated.
-    /// </summary>
-    private async Task<Room> SeedRoomAsync(
-        string name,
-        int floor = 1,
-        bool isActive = true,
-        int workspaces = 0,
-        int inactiveWorkspaces = 0
-    )
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
-
-        var room = new Room(name, floor, null);
-        for (var i = 0; i < workspaces; i++)
-        {
-            // Codes are unique in the whole center: max 20 chars, so 1 + 10 + "-" + digits fits.
-            var desk = room.AddWorkspace($"{UniqueTag()}-{i}", WorkspaceType.HotDesk, 1);
-            if (i < inactiveWorkspaces)
-            {
-                desk.Deactivate();
-            }
-        }
-
-        // Deactivate AFTER adding workspaces: AddWorkspace refuses inactive rooms.
-        if (!isActive)
-        {
-            room.Deactivate();
-        }
-
-        db.Rooms.Add(room);
-        await db.SaveChangesAsync();
-        return room;
-    }
-
-    private static async Task<string?> ReadCodeAsync(HttpResponseMessage response) =>
-        (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString();
 }

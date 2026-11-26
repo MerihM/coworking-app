@@ -1038,6 +1038,388 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists workspaces, one page at a time, sorted by room (floor, name) and code. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only workspaces in this room (the room detail page uses it). */
+                    RoomId?: number;
+                    /** @description Only workspaces of this type. */
+                    Type?: components["schemas"]["WorkspaceType"];
+                    /** @description true = only active, false = only deactivated (the workspace's own flag). */
+                    IsActive?: boolean;
+                    /** @description Part of the code, letter case ignored. */
+                    Search?: string;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfWorkspaceResponse"];
+                    };
+                };
+                /** @description Invalid paging or filter values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new, active workspace in an active room. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateWorkspaceRequest"];
+                    "text/json": components["schemas"]["CreateWorkspaceRequest"];
+                    "application/*+json": components["schemas"]["CreateWorkspaceRequest"];
+                };
+            };
+            responses: {
+                /** @description Created; Location points to the new workspace. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkspaceResponse"];
+                    };
+                };
+                /** @description Invalid input (incl. capacity that doesn't fit the type). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description The room doesn't exist. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Code already used (code workspaces.code_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The room is deactivated (code workspaces.room_inactive). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one workspace. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Workspace id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The workspace. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkspaceResponse"];
+                    };
+                };
+                /** @description No workspace with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        /** Changes code, type and capacity; a different roomId moves the workspace. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Workspace id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateWorkspaceRequest"];
+                    "text/json": components["schemas"]["UpdateWorkspaceRequest"];
+                    "application/*+json": components["schemas"]["UpdateWorkspaceRequest"];
+                };
+            };
+            responses: {
+                /** @description The updated workspace. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkspaceResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description No workspace (or target room) with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Code already used (code workspaces.code_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Target room deactivated, or an assigned fixed desk changes type (codes workspaces.room_inactive, workspaces.fixed_assigned). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a workspace that was never reserved (otherwise: deactivate it). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Workspace id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No workspace with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The workspace has reservations (code conflict.in_use). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Fixed desk assigned to a member (code workspaces.fixed_assigned). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Takes the workspace out of the offer. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Workspace id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deactivated (or already inactive). */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No workspace with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Fixed desk assigned to a member (code workspaces.fixed_assigned). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Puts a deactivated workspace back into the offer (the room's flag is not changed). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Workspace id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No workspace with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1081,6 +1463,23 @@ export interface components {
             floor: number;
             /** @description Optional description, up to 1000 characters. */
             description: null | string;
+        };
+        /** @description Body of `POST /api/workspaces`: a new, active workspace in an active room (FR09, UC11). */
+        CreateWorkspaceRequest: {
+            /**
+             * Format: int32
+             * @description The room it goes into (404 if unknown, 422 if deactivated).
+             */
+            roomId: number;
+            /** @description Unique label: letters, digits and "-", max 20 (e.g. "os-01" is stored as "OS-01"). */
+            code: string;
+            /** @description HotDesk, FixedDesk, Office or MeetingRoom. */
+            type: components["schemas"]["WorkspaceType"];
+            /**
+             * Format: int32
+             * @description Desks: exactly 1; Office: 1–20; MeetingRoom: 2–50.
+             */
+            capacity: number;
         };
         /** @description A staff account as shown in the administrator's list and edit form. Never contains the password hash. */
         EmployeeResponse: {
@@ -1152,6 +1551,31 @@ export interface components {
         PagedResultOfRoomResponse: {
             /** @description The items on this page (may be empty). */
             items: components["schemas"]["RoomResponse"][];
+            /**
+             * Format: int32
+             * @description This page's number (1-based).
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description Requested items per page.
+             */
+            pageSize: number;
+            /**
+             * Format: int32
+             * @description Number of items on ALL pages that match the filters.
+             */
+            totalCount: number;
+            /**
+             * Format: int32
+             * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
+             */
+            totalPages?: number;
+        };
+        /** @description One page of a list plus what the frontend needs to draw the pager. */
+        PagedResultOfWorkspaceResponse: {
+            /** @description The items on this page (may be empty). */
+            items: components["schemas"]["WorkspaceResponse"][];
             /**
              * Format: int32
              * @description This page's number (1-based).
@@ -1258,6 +1682,26 @@ export interface components {
             /** @description New description, or null for none. */
             description: null | string;
         };
+        /**
+         * @description Body of `PUT /api/workspaces/{id}`: the whole editable state. A different
+         *     RoomId moves the workspace to that room. The active flag has its own endpoints.
+         */
+        UpdateWorkspaceRequest: {
+            /**
+             * Format: int32
+             * @description Room the workspace should be in (move = another id).
+             */
+            roomId: number;
+            /** @description Unique label. */
+            code: string;
+            /** @description New type (a fixed desk assigned to a member can't change type). */
+            type: components["schemas"]["WorkspaceType"];
+            /**
+             * Format: int32
+             * @description Must fit the new type.
+             */
+            capacity: number;
+        };
         /** @description The logged-in user as the frontend sees it (login/register/refresh responses and `GET /api/auth/me`). */
         UserResponse: {
             /**
@@ -1274,6 +1718,41 @@ export interface components {
             /** @description Display name for the header/user menu. */
             fullName: string;
         };
+        /** @description A workspace as shown in the manager's list and edit form (FR09). */
+        WorkspaceResponse: {
+            /**
+             * Format: int32
+             * @description Workspace id.
+             */
+            id: number;
+            /** @description Unique label in upper case, e.g. "OS-01". */
+            code: string;
+            /** @description HotDesk, FixedDesk, Office or MeetingRoom (sent as a string). */
+            type: components["schemas"]["WorkspaceType"];
+            /**
+             * Format: int32
+             * @description Number of people.
+             */
+            capacity: number;
+            /** @description The workspace's own flag. It is offered only if the room is active too. */
+            isActive: boolean;
+            /**
+             * Format: int32
+             * @description Id of the room it is in.
+             */
+            roomId: number;
+            /** @description Name of that room (saves the UI a second request). */
+            roomName: string;
+            /** @description Whether that room is active. */
+            roomIsActive: boolean;
+            /** @description Only for fixed desks: a member has this desk assigned (then it can't be deactivated, deleted or retyped). */
+            isAssigned: boolean;
+        };
+        /**
+         * @description Kind of reservable unit (design document: TipRadnogMjesta).
+         * @enum {unknown}
+         */
+        WorkspaceType: "HotDesk" | "FixedDesk" | "Office" | "MeetingRoom";
     };
     responses: never;
     parameters: never;

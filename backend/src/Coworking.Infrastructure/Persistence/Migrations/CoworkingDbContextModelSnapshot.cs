@@ -513,6 +513,8 @@ namespace Coworking.Infrastructure.Persistence.Migrations
                     b.ToTable("workspaces", null, t =>
                         {
                             t.HasCheckConstraint("ck_workspaces_capacity", "capacity > 0");
+
+                            t.HasCheckConstraint("ck_workspaces_capacity_by_type", "(type IN ('HotDesk', 'FixedDesk') AND capacity = 1) OR (type = 'Office' AND capacity BETWEEN 1 AND 20) OR (type = 'MeetingRoom' AND capacity BETWEEN 2 AND 50)");
                         });
                 });
 
