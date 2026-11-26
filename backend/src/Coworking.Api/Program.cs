@@ -128,7 +128,8 @@ try
     builder.Services.AddJwtAuthentication();
     builder.Services.AddAuthorizationPolicies();
 
-    // Brute-force protection for login and registration: 5 attempts per minute per IP (CW-11).
+    // Rate limits per IP: login/register 5 per minute (CW-11), public endpoints such as the
+    // availability search 60 per minute (CW-21). Endpoints opt in with [EnableRateLimiting].
     builder.Services.AddAuthRateLimiting();
 
     // Health checks: /health returns "Healthy" only when the API is running AND PostgreSQL
@@ -168,7 +169,8 @@ try
     // produces text (validation messages). See Localization/LocalizationSetup.cs (CW-11).
     app.UseApiLocalization();
 
-    // Rejects too many login/register attempts early, before any password hashing work (CW-11).
+    // Rejects too many login/register attempts (and public searches) early, before any password
+    // hashing or database work (CW-11, CW-21).
     app.UseRateLimiter();
 
     // Reads the "Authorization: Bearer <token>" header and, if the token is valid, fills

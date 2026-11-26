@@ -15,7 +15,7 @@ namespace Coworking.IntegrationTests.Fixtures;
 
 /// <summary>
 /// Builders that put data straight into the test database (no API calls), plus small client
-/// helpers. Shared by the Rooms, Workspaces and MembershipTypes tests (CW-18–20) and meant for Sprint 4/5 too.
+/// helpers. Shared by the Rooms, Workspaces, MembershipTypes and Availability tests (CW-18–21) and meant for Sprint 4/5 too.
 /// </summary>
 /// <remarks>
 /// Every test class shares ONE database, so everything created here gets unique names, codes and
@@ -146,25 +146,30 @@ public static class TestSeed
     }
 
     /// <summary>
-    /// Creates a member with a PAID monthly membership and a Confirmed 2-hour reservation of the
-    /// workspace on the next weekday at least two days ahead, 10:00–12:00 Sarajevo time
-    /// (inside working hours, BR04; inside the membership, BR02).
+    /// Creates a member with a PAID monthly membership (30 days from today) and a reservation of the
+    /// workspace. Without arguments: the next weekday at least two days ahead, 10:00–12:00 Sarajevo
+    /// time (inside working hours, BR04; inside the membership, BR02).
     /// </summary>
     /// <param name="factory">A factory with a database.</param>
     /// <param name="workspaceId">The workspace to reserve.</param>
+    /// <param name="day">Local date; must be in the future and within 30 days (the membership).</param>
+    /// <param name="from">Local start time (default 10:00).</param>
+    /// <param name="to">Local end time (default 12:00).</param>
+    /// <param name="cancelled">true = the member cancels it right away (status Cancelled, CW-21).</param>
     /// <returns>The reservation (detached).</returns>
-    public static async Task<Reservation> SeedReservationAsync(this PostgresApiFactory factory, int workspaceId)
+    public static async Task<Reservation> SeedReservationAsync(
+        this PostgresApiFactory factory,
+        int workspaceId,
+        DateOnly? day = null,
+        TimeOnly? from = null,
+        TimeOnly? to = null,
+        bool cancelled = false
+    )
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
         var now = DateTimeOffset.UtcNow;
-
-        // Two days ahead avoids any UTC/local date edge around midnight; skip the weekend.
-        var day = CenterTimeZone.ToLocalDate(now).AddDays(2);
-        while (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
-        {
-            day = day.AddDays(1);
-        }
+        var date = day ?? NextWeekday(minDaysAhead: 2);
 
         var workspace = await db.Workspaces.SingleAsync(w => w.Id == workspaceId);
         var receptionist = new Employee("Test", "Receptionist", UniqueEmail("receptionist"), UnusedHash, EmployeeRole.Receptionist);
@@ -177,16 +182,52 @@ public static class TestSeed
         var reservation = Reservation.Create(
             member,
             workspace,
-            CenterTimeZone.FromLocal(day, new TimeOnly(10, 0)),
-            CenterTimeZone.FromLocal(day, new TimeOnly(12, 0)),
+            CenterTimeZone.FromLocal(date, from ?? new TimeOnly(10, 0)),
+            CenterTimeZone.FromLocal(date, to ?? new TimeOnly(12, 0)),
             now
         );
+
+        if (cancelled)
+        {
+            // Days ahead, so the member is still allowed to cancel (BR03: at least 2 h before).
+            reservation.CancelByMember(now);
+        }
 
         db.Employees.Add(receptionist);
         db.Members.Add(member);
         db.Reservations.Add(reservation);
         await db.SaveChangesAsync();
         return reservation;
+    }
+
+    /// <summary>
+    /// The first Monday–Friday that is at least <paramref name="minDaysAhead"/> days after today
+    /// (Sarajevo date). At least 2 days avoids any UTC/local edge around midnight.
+    /// </summary>
+    /// <param name="minDaysAhead">Minimum distance from today.</param>
+    public static DateOnly NextWeekday(int minDaysAhead = 2)
+    {
+        var day = CenterTimeZone.ToLocalDate(DateTimeOffset.UtcNow).AddDays(minDaysAhead);
+        while (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+        {
+            day = day.AddDays(1);
+        }
+
+        return day;
+    }
+
+    /// <summary>The first given day of the week at least <paramref name="minDaysAhead"/> days after today.</summary>
+    /// <param name="dayOfWeek">E.g. Saturday.</param>
+    /// <param name="minDaysAhead">Minimum distance from today.</param>
+    public static DateOnly Next(DayOfWeek dayOfWeek, int minDaysAhead = 2)
+    {
+        var day = CenterTimeZone.ToLocalDate(DateTimeOffset.UtcNow).AddDays(minDaysAhead);
+        while (day.DayOfWeek != dayOfWeek)
+        {
+            day = day.AddDays(1);
+        }
+
+        return day;
     }
 
     /// <summary>Inserts a membership type (CW-20).</summary>

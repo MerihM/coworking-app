@@ -24,6 +24,9 @@ public static class TestAuthSettings
         // of 5 per minute would make unrelated tests fail with 429. The rate-limit test sets 5 again.
         ["RateLimiting:AuthPermitLimit"] = "100000",
 
+        // CW-21: the same reason for the public policy (availability search).
+        ["RateLimiting:PublicPermitLimit"] = "100000",
+
         // CW-12: switch administrator seeding OFF in tests, even if the developer has Seed:Admin in
         // user-secrets (tests run in the Development environment, which loads user-secrets).
         // Otherwise the app would try to seed before Testcontainers has migrated the database, or
