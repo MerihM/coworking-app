@@ -23,6 +23,16 @@ const codeMessageKeys = {
   "workspaces.fixed_assigned": "errors.fixedDeskAssigned",
   "workspaces.room_inactive": "errors.roomInactive",
   "membership_types.name_taken": "errors.membershipTypeNameTaken",
+  "availability.in_past": "errors.inPast",
+} as const;
+
+/**
+ * Business rule code → translation key, for errors that come with `ruleCode` but no `code`
+ * (domain rules such as BR04, CW-25). Their English `detail` is written for developers, so the
+ * UI shows its own translated sentence instead.
+ */
+const ruleMessageKeys = {
+  BR04: "errors.outsideWorkingHours",
 } as const;
 
 type KnownCode = keyof typeof codeMessageKeys;
@@ -31,10 +41,19 @@ function isKnownCode(code: string | undefined): code is KnownCode {
   return code !== undefined && Object.hasOwn(codeMessageKeys, code);
 }
 
+type KnownRule = keyof typeof ruleMessageKeys;
+
+function isKnownRule(ruleCode: string | undefined): ruleCode is KnownRule {
+  return ruleCode !== undefined && Object.hasOwn(ruleMessageKeys, ruleCode);
+}
+
 /** One sentence for an alert or notification. */
 export function problemMessage(problem: ApiProblem, t: TFunction): string {
   if (isKnownCode(problem.code)) {
     return t(codeMessageKeys[problem.code]);
+  }
+  if (isKnownRule(problem.ruleCode)) {
+    return t(ruleMessageKeys[problem.ruleCode]);
   }
   if (problem.status === 0) {
     return t("errors.network");

@@ -40,3 +40,19 @@ export function formatPrice(value: number, language: string | undefined): string
 export function formatDuration(days: number, t: TFunction): string {
   return t("format.duration", { count: days });
 }
+
+/**
+ * A calendar date in words, in the UI language: formatLongDate("2026-12-01", "en") →
+ * "Tuesday 1 December", formatLongDate("2026-12-01", "bs") → "utorak, 1. decembar".
+ * @param isoDate A local date as "YYYY-MM-DD" (the API's and the date picker's format).
+ * @param language The current UI language, e.g. i18n.resolvedLanguage.
+ */
+export function formatLongDate(isoDate: string, language: string | undefined): string {
+  // Midnight UTC + timeZone "UTC": the visitor's own time zone can't move the date by a day.
+  return new Intl.DateTimeFormat(language?.startsWith("bs") ? "bs-BA" : "en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${isoDate}T00:00:00Z`));
+}
