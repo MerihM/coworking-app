@@ -9,7 +9,7 @@ import { UserMenu } from "./UserMenu";
 
 type NavItem = {
   to: string;
-  labelKey: "nav.home" | "nav.account" | "nav.staff";
+  labelKey: "nav.home" | "nav.account" | "nav.staff" | "nav.spaces";
   /** Show only to logged-in users. */
   requiresAuth?: boolean;
   /** Show only to these roles (implies requiresAuth). */
@@ -24,7 +24,16 @@ const navItems: readonly NavItem[] = [
   { to: "/", labelKey: "nav.home" },
   { to: "/account", labelKey: "nav.account", requiresAuth: true },
   { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
+  { to: "/manage/rooms", labelKey: "nav.spaces", roles: [Roles.Manager] }, // CW-23
 ];
+
+/**
+ * Is this nav item the current page? Exact match, or a page below it, so "Spaces" stays
+ * highlighted on /manage/rooms/3. "/" only matches itself (otherwise it would match everything).
+ */
+function isCurrent(itemPath: string, pathname: string) {
+  return pathname === itemPath || (itemPath !== "/" && pathname.startsWith(`${itemPath}/`));
+}
 
 /**
  * The frame around every page (NFR03/NFR04: desktop and mobile).
@@ -80,7 +89,7 @@ export function AppLayout() {
                     key={item.to}
                     component={Link}
                     to={item.to}
-                    variant={pathname === item.to ? "light" : "subtle"}
+                    variant={isCurrent(item.to, pathname) ? "light" : "subtle"}
                     size="compact-md"
                   >
                     {t(item.labelKey)}
@@ -106,7 +115,7 @@ export function AppLayout() {
             component={Link}
             to={item.to}
             label={t(item.labelKey)}
-            active={pathname === item.to}
+            active={isCurrent(item.to, pathname)}
             onClick={close}
           />
         ))}

@@ -18,9 +18,20 @@ export function fakeAuth(overrides: Partial<AuthContextValue> = {}): AuthContext
   };
 }
 
-/** Renders `ui` as the page at `path`. */
-export function renderPage(ui: ReactElement, auth: AuthContextValue = fakeAuth(), path = "/") {
-  const router = createMemoryRouter([{ path: "*", element: ui }], { initialEntries: [path] });
+/**
+ * Renders `ui` as the page at `path`.
+ * `routePath` is the route PATTERN – pass e.g. "/manage/rooms/:roomId" when the page reads
+ * useParams() (CW-23); the default "*" matches any path but has no parameters.
+ */
+export function renderPage(
+  ui: ReactElement,
+  auth: AuthContextValue = fakeAuth(),
+  path = "/",
+  routePath = "*",
+) {
+  const router = createMemoryRouter([{ path: routePath, element: ui }], {
+    initialEntries: [path],
+  });
 
   return render(
     // env="test": no transitions/portals timing tricks, so modals and menus render at once in jsdom.

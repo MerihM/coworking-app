@@ -1,8 +1,11 @@
 // Calls to /api/employees (FR12, administrator only). Each function returns a small result object
 // instead of throwing, so pages can show the error next to the right control.
 import { api } from "../../api/client";
-import { toProblem, type ApiProblem } from "../../api/problem";
+import { callApi as call } from "../../api/result";
 import type { components, paths } from "../../api/schema";
+
+// ApiResult moved to api/result.ts in CW-23; re-exported so existing imports keep working.
+export type { ApiResult } from "../../api/result";
 
 export type Employee = components["schemas"]["EmployeeResponse"];
 export type EmployeeRole = components["schemas"]["EmployeeRole"];
@@ -20,25 +23,6 @@ export const employeeRoles = [
   "Manager",
   "Administrator",
 ] as const satisfies readonly EmployeeRole[];
-
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; problem: ApiProblem };
-
-/**
- * Runs one openapi-fetch call and turns its answer into ApiResult. A request that never got an
- * answer (API down, offline) becomes status 0.
- */
-async function call<T>(
-  send: () => Promise<{ data?: unknown; error?: unknown; response: Response }>,
-): Promise<ApiResult<T>> {
-  try {
-    const { data, error, response } = await send();
-    return response.ok
-      ? { ok: true, data: data as T }
-      : { ok: false, problem: toProblem(error, response) };
-  } catch {
-    return { ok: false, problem: { status: 0 } };
-  }
-}
 
 export const listEmployees = (query: EmployeeListQuery) =>
   call<EmployeePage>(() => api.GET("/api/employees", { params: { query } }));
