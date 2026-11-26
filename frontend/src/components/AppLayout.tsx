@@ -2,14 +2,14 @@ import { AppShell, Box, Burger, Button, Container, Group, NavLink, Text } from "
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router";
-import type { Role } from "../features/auth/roles";
+import { Roles, type Role } from "../features/auth/roles";
 import { useAuth } from "../features/auth/useAuth";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { UserMenu } from "./UserMenu";
 
 type NavItem = {
   to: string;
-  labelKey: "nav.home" | "nav.account";
+  labelKey: "nav.home" | "nav.account" | "nav.staff";
   /** Show only to logged-in users. */
   requiresAuth?: boolean;
   /** Show only to these roles (implies requiresAuth). */
@@ -23,7 +23,7 @@ type NavItem = {
 const navItems: readonly NavItem[] = [
   { to: "/", labelKey: "nav.home" },
   { to: "/account", labelKey: "nav.account", requiresAuth: true },
-  // CW-17: { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
+  { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
 ];
 
 /**
