@@ -9,7 +9,7 @@ import { UserMenu } from "./UserMenu";
 
 type NavItem = {
   to: string;
-  labelKey: "nav.home" | "nav.account" | "nav.staff" | "nav.spaces";
+  labelKey: "nav.home" | "nav.account" | "nav.staff" | "nav.spaces" | "nav.membershipTypes";
   /** Show only to logged-in users. */
   requiresAuth?: boolean;
   /** Show only to these roles (implies requiresAuth). */
@@ -25,6 +25,7 @@ const navItems: readonly NavItem[] = [
   { to: "/account", labelKey: "nav.account", requiresAuth: true },
   { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
   { to: "/manage/rooms", labelKey: "nav.spaces", roles: [Roles.Manager] }, // CW-23
+  { to: "/manage/membership-types", labelKey: "nav.membershipTypes", roles: [Roles.Manager] }, // CW-24
 ];
 
 /**

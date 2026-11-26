@@ -16,6 +16,7 @@ import { LoginPage } from "../pages/LoginPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { StaffListPage } from "../pages/admin/StaffListPage";
+import { MembershipTypesPage } from "../pages/manage/MembershipTypesPage";
 import { RoomDetailPage } from "../pages/manage/RoomDetailPage";
 import { RoomsListPage } from "../pages/manage/RoomsListPage";
 
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "manage/rooms", Component: RoomsListPage }, // CW-23
               { path: "manage/rooms/:roomId", Component: RoomDetailPage }, // CW-23
+              { path: "manage/membership-types", Component: MembershipTypesPage }, // CW-24
             ],
           },
         ],

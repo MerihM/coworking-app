@@ -21,6 +21,7 @@ export const bs: typeof en = {
     account: "Moj račun",
     staff: "Osoblje",
     spaces: "Prostori",
+    membershipTypes: "Tipovi članarina",
     openMenu: "Otvori navigaciju",
     closeMenu: "Zatvori navigaciju",
   },
@@ -100,6 +101,7 @@ export const bs: typeof en = {
       "Ovo fiksno mjesto je dodijeljeno članu. Prvo uklonite dodjelu (upravljanje članovima).",
     roomInactive:
       "Ova prostorija je deaktivirana. Aktivirajte je prije dodavanja ili premještanja radnih mjesta u nju.",
+    membershipTypeNameTaken: "Tip članarine s ovim nazivom već postoji.",
     network: "Server nije dostupan. Provjerite vezu i pokušajte ponovo.",
     server: "Došlo je do greške na serveru. Pokušajte ponovo kasnije.",
     unknown: "Nešto nije u redu. Pokušajte ponovo.",
@@ -347,6 +349,84 @@ export const bs: typeof en = {
       deactivated: "Radno mjesto {{code}} je deaktivirano.",
       activated: "Radno mjesto {{code}} je aktivirano.",
       deleted: "Radno mjesto {{code}} je obrisano.",
+      failed: "Akcija nije uspjela",
+    },
+  },
+  format: {
+    // Bosanski: 1, 21, 31… dan (_one); 2–4, 22–24… dana (_few); ostalo dana (_other).
+    duration_one: "{{count}} dan",
+    duration_few: "{{count}} dana",
+    duration_other: "{{count}} dana",
+  },
+  membershipTypes: {
+    title: "Tipovi članarina",
+    add: "Dodaj tip članarine",
+    empty: "Nijedan tip članarine ne odgovara ovim filterima.",
+    loadFailed: "Tipove članarina nije moguće učitati.",
+    filters: {
+      search: "Pretraga",
+      searchPlaceholder: "Naziv",
+      status: "Status",
+      all: "Svi",
+    },
+    columns: {
+      name: "Naziv",
+      duration: "Trajanje",
+      price: "Cijena",
+      sold: "Prodano",
+      status: "Status",
+      actions: "Akcije",
+    },
+    actions: {
+      menu: "Akcije za {{name}}",
+      edit: "Uredi",
+      deactivate: "Deaktiviraj",
+      activate: "Aktiviraj",
+      delete: "Obriši",
+      deleteHint: "Ovaj tip je već kupljen, pa se može samo deaktivirati.",
+    },
+    form: {
+      createTitle: "Novi tip članarine",
+      editTitle: "Uredi tip članarine",
+      name: "Naziv",
+      duration: "Trajanje (dana)",
+      durationHint: "1 = dnevna, 7 = sedmična, 30 = mjesečna.",
+      price: "Cijena",
+      create: "Kreiraj",
+      soldHint_one:
+        "S ovim tipom je kupljena {{count}} članarina. Ona zadržava svoju cijenu i trajanje; izmjene važe samo za nove kupovine.",
+      soldHint_few:
+        "S ovim tipom su kupljene {{count}} članarine. One zadržavaju svoju cijenu i trajanje; izmjene važe samo za nove kupovine.",
+      soldHint_other:
+        "S ovim tipom je kupljeno {{count}} članarina. One zadržavaju svoju cijenu i trajanje; izmjene važe samo za nove kupovine.",
+    },
+    validation: {
+      price: "Između 0,01 i 10.000.",
+      priceDecimals: "Najviše 2 decimale (npr. 15,50).",
+    },
+    confirm: {
+      deactivate: {
+        title: "Deaktivirati tip članarine?",
+        message: "{{name}} više neće biti u ponudi. Već kupljene članarine ostaju važeće.",
+        confirm: "Deaktiviraj",
+      },
+      activate: {
+        title: "Aktivirati tip članarine?",
+        message: "{{name}} će ponovo biti u ponudi.",
+        confirm: "Aktiviraj",
+      },
+      delete: {
+        title: "Obrisati tip članarine?",
+        message: "{{name}} bit će trajno obrisan. Ovo se ne može poništiti.",
+        confirm: "Obriši",
+      },
+    },
+    notify: {
+      created: "{{name}} je dodan u cjenovnik.",
+      updated: "Promjene za {{name}} su sačuvane.",
+      deactivated: "{{name}} više nije u ponudi.",
+      activated: "{{name}} je ponovo u ponudi.",
+      deleted: "{{name}} je obrisan.",
       failed: "Akcija nije uspjela",
     },
   },

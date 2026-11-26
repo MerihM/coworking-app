@@ -22,6 +22,7 @@ const codeMessageKeys = {
   "workspaces.code_taken": "errors.workspaceCodeTaken",
   "workspaces.fixed_assigned": "errors.fixedDeskAssigned",
   "workspaces.room_inactive": "errors.roomInactive",
+  "membership_types.name_taken": "errors.membershipTypeNameTaken",
 } as const;
 
 type KnownCode = keyof typeof codeMessageKeys;
