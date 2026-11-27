@@ -16,7 +16,9 @@ type NavItem = {
     | "nav.staff"
     | "nav.spaces"
     | "nav.membershipTypes"
-    | "nav.myMembership";
+    | "nav.myMembership"
+    | "nav.members"
+    | "nav.payments";
   /** Show only to logged-in users. */
   requiresAuth?: boolean;
   /** Show only to these roles (implies requiresAuth). */
@@ -32,6 +34,13 @@ const navItems: readonly NavItem[] = [
   { to: "/availability", labelKey: "nav.availability" }, // CW-25, public
   { to: "/memberships", labelKey: "nav.myMembership", roles: [Roles.Member] }, // CW-27
   { to: "/account", labelKey: "nav.account", requiresAuth: true },
+  // Reception (CW-28): receptionist and manager.
+  { to: "/reception/members", labelKey: "nav.members", roles: [Roles.Receptionist, Roles.Manager] },
+  {
+    to: "/reception/payments",
+    labelKey: "nav.payments",
+    roles: [Roles.Receptionist, Roles.Manager],
+  },
   { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
   { to: "/manage/rooms", labelKey: "nav.spaces", roles: [Roles.Manager] }, // CW-23
   { to: "/manage/membership-types", labelKey: "nav.membershipTypes", roles: [Roles.Manager] }, // CW-24

@@ -19,6 +19,9 @@ import { RegisterPage } from "../pages/RegisterPage";
 import { StaffListPage } from "../pages/admin/StaffListPage";
 import { MembershipTypesPage } from "../pages/manage/MembershipTypesPage";
 import { MyMembershipPage } from "../pages/member/MyMembershipPage";
+import { MemberDetailPage } from "../pages/reception/MemberDetailPage";
+import { MembersListPage } from "../pages/reception/MembersListPage";
+import { PaymentsPage } from "../pages/reception/PaymentsPage";
 import { RoomDetailPage } from "../pages/manage/RoomDetailPage";
 import { RoomsListPage } from "../pages/manage/RoomsListPage";
 
@@ -57,6 +60,17 @@ export const router = createBrowserRouter([
             Component: RequireRole,
             handle: { roles: [Roles.Member] } satisfies RouteHandle,
             children: [{ path: "memberships", Component: MyMembershipPage }],
+          },
+
+          // Reception: Receptionist or Manager (FR07, FR08 – CW-28). The administrator gets /forbidden.
+          {
+            Component: RequireRole,
+            handle: { roles: [Roles.Receptionist, Roles.Manager] } satisfies RouteHandle,
+            children: [
+              { path: "reception/members", Component: MembersListPage },
+              { path: "reception/members/:memberId", Component: MemberDetailPage },
+              { path: "reception/payments", Component: PaymentsPage },
+            ],
           },
 
           // Manager only (FR09, FR10). Roles don't inherit: the administrator gets /forbidden too.

@@ -27,7 +27,10 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
     [InlineData(Roles.Receptionist, HttpStatusCode.OK)]
     [InlineData(Roles.Manager, HttpStatusCode.OK)]
     [InlineData(Roles.Administrator, HttpStatusCode.Forbidden)]
-    public async Task NFR01_OnlyReceptionAndManagerManageMembers(string? role, HttpStatusCode expected)
+    public async Task NFR01_OnlyReceptionAndManagerManageMembers(
+        string? role,
+        HttpStatusCode expected
+    )
     {
         HttpResponseMessage response;
         if (role is null)
@@ -60,7 +63,11 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
         Assert.True(created.IsActive);
         Assert.Null(created.CurrentMembership);
         Assert.False(created.HasUnpaidMembership);
-        Assert.EndsWith($"/api/members/{created.Id}", response.Headers.Location?.ToString(), StringComparison.Ordinal);
+        Assert.EndsWith(
+            $"/api/members/{created.Id}",
+            response.Headers.Location?.ToString(),
+            StringComparison.Ordinal
+        );
 
         using var anonymous = factory.CreateHttpsClient();
         var login = await anonymous.PostAsJsonAsync(
@@ -76,7 +83,10 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
         using var reception = await factory.CreateClientAsAsync(Roles.Receptionist);
 
         // The receptionist's own e-mail: unique across BOTH tables, not only members.
-        var response = await reception.Client.PostAsJsonAsync("/api/members", NewMember(reception.User.Email));
+        var response = await reception.Client.PostAsJsonAsync(
+            "/api/members",
+            NewMember(reception.User.Email)
+        );
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.Equal(AuthErrorCodes.EmailTaken, await ReadCodeAsync(response));
@@ -89,7 +99,11 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
 
         var response = await reception.Client.PostAsJsonAsync(
             "/api/members",
-            NewMember($"{UniqueTag()}@example.com") with { Phone = "abc", Password = "short" }
+            NewMember($"{UniqueTag()}@example.com") with
+            {
+                Phone = "abc",
+                Password = "short",
+            }
         );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -106,7 +120,14 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
         using var reception = await factory.CreateClientAsAsync(Roles.Receptionist);
         var lastName = $"Zz{UniqueTag()}";
         var phone = $"+387 {Random.Shared.Next(100_000, 999_999)} 01";
-        await CreateAsync(reception.Client, NewMember($"{UniqueTag()}@example.com") with { LastName = lastName, Phone = phone });
+        await CreateAsync(
+            reception.Client,
+            NewMember($"{UniqueTag()}@example.com") with
+            {
+                LastName = lastName,
+                Phone = phone,
+            }
+        );
 
         var byName = await reception.Client.GetFromJsonAsync<PagedResult<MemberResponse>>(
             $"/api/members?search={lastName.ToUpperInvariant()}"
@@ -136,7 +157,10 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
         var assignedBody = (await assigned.Content.ReadFromJsonAsync<MemberResponse>())!;
 
         Assert.Equal(HttpStatusCode.OK, assigned.StatusCode);
-        Assert.Equal(("Lejla", "Novak", newEmail, "061/222-333"), (assignedBody.FirstName, assignedBody.LastName, assignedBody.Email, assignedBody.Phone));
+        Assert.Equal(
+            ("Lejla", "Novak", newEmail, "061/222-333"),
+            (assignedBody.FirstName, assignedBody.LastName, assignedBody.Email, assignedBody.Phone)
+        );
         Assert.Equal(desk.Id, assignedBody.FixedDesk?.Id);
 
         var removed = await reception.Client.PutAsJsonAsync(
@@ -167,7 +191,13 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
     {
         using var reception = await factory.CreateClientAsAsync(Roles.Receptionist);
         var desk = await SeedDeskAsync(WorkspaceType.FixedDesk);
-        await CreateAsync(reception.Client, NewMember($"{UniqueTag()}@example.com") with { FixedWorkspaceId = desk.Id });
+        await CreateAsync(
+            reception.Client,
+            NewMember($"{UniqueTag()}@example.com") with
+            {
+                FixedWorkspaceId = desk.Id,
+            }
+        );
         var second = await CreateAsync(reception.Client, NewMember($"{UniqueTag()}@example.com"));
 
         var response = await reception.Client.PutAsJsonAsync(
@@ -177,6 +207,59 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.Equal(MemberErrorCodes.FixedDeskTaken, await ReadCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task FixedDesks_ListsOnlyAssignableDesks_WithTheirMember()
+    {
+        using var reception = await factory.CreateClientAsAsync(Roles.Receptionist);
+        var room = await factory.SeedRoomAsync($"Room {UniqueTag()}");
+        var free = await factory.SeedWorkspaceAsync(room.Id, WorkspaceType.FixedDesk);
+        var taken = await factory.SeedWorkspaceAsync(room.Id, WorkspaceType.FixedDesk);
+        var inactive = await factory.SeedWorkspaceAsync(
+            room.Id,
+            WorkspaceType.FixedDesk,
+            isActive: false
+        );
+        var hotDesk = await factory.SeedWorkspaceAsync(room.Id, WorkspaceType.HotDesk);
+        var holder = await CreateAsync(
+            reception.Client,
+            NewMember($"{UniqueTag()}@example.com") with
+            {
+                FixedWorkspaceId = taken.Id,
+            }
+        );
+
+        var desks = (
+            await reception.Client.GetFromJsonAsync<List<FixedDeskOption>>(
+                "/api/members/fixed-desks"
+            )
+        )!;
+        var ids = desks.Select(d => d.Id).ToList();
+
+        Assert.Contains(free.Id, ids);
+        Assert.DoesNotContain(inactive.Id, ids);
+        Assert.DoesNotContain(hotDesk.Id, ids);
+        var takenDesk = desks.Single(d => d.Id == taken.Id);
+        Assert.Equal(holder.Id, takenDesk.AssignedMemberId);
+        Assert.Equal(room.Name, takenDesk.RoomName);
+        Assert.Null(desks.Single(d => d.Id == free.Id).AssignedMemberId);
+    }
+
+    [Theory]
+    [InlineData(Roles.Member, HttpStatusCode.Forbidden)]
+    [InlineData(Roles.Manager, HttpStatusCode.OK)]
+    [InlineData(Roles.Administrator, HttpStatusCode.Forbidden)]
+    public async Task NFR01_FixedDesksOnlyForReceptionAndManager(
+        string role,
+        HttpStatusCode expected
+    )
+    {
+        using var caller = await factory.CreateClientAsAsync(role);
+
+        var response = await caller.Client.GetAsync("/api/members/fixed-desks");
+
+        Assert.Equal(expected, response.StatusCode);
     }
 
     // ------------------------------------------------------------------ deactivate / delete
@@ -190,11 +273,22 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
         using var anonymous = factory.CreateHttpsClient();
         var login = new LoginRequest(email, AuthenticatedClientFactory.Password);
 
-        Assert.Equal(HttpStatusCode.NoContent, (await reception.Client.PostAsync($"/api/members/{member.Id}/deactivate", null)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.PostAsJsonAsync("/api/auth/login", login)).StatusCode);
+        Assert.Equal(
+            HttpStatusCode.NoContent,
+            (
+                await reception.Client.PostAsync($"/api/members/{member.Id}/deactivate", null)
+            ).StatusCode
+        );
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            (await anonymous.PostAsJsonAsync("/api/auth/login", login)).StatusCode
+        );
 
         await reception.Client.PostAsync($"/api/members/{member.Id}/activate", null);
-        Assert.Equal(HttpStatusCode.OK, (await anonymous.PostAsJsonAsync("/api/auth/login", login)).StatusCode);
+        Assert.Equal(
+            HttpStatusCode.OK,
+            (await anonymous.PostAsJsonAsync("/api/auth/login", login)).StatusCode
+        );
     }
 
     [Fact]
@@ -206,7 +300,10 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
         var response = await reception.Client.DeleteAsync($"/api/members/{member.Id}");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await reception.Client.GetAsync($"/api/members/{member.Id}")).StatusCode);
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            (await reception.Client.GetAsync($"/api/members/{member.Id}")).StatusCode
+        );
     }
 
     [Fact]
@@ -232,7 +329,10 @@ public class MembersEndpointsTests(PostgresApiFactory factory) : IClassFixture<P
     private static CreateMemberRequest NewMember(string email) =>
         new("Test", "Member", email, "+387 61 555 666", AuthenticatedClientFactory.Password, null);
 
-    private static async Task<MemberResponse> CreateAsync(HttpClient client, CreateMemberRequest request)
+    private static async Task<MemberResponse> CreateAsync(
+        HttpClient client,
+        CreateMemberRequest request
+    )
     {
         var response = await client.PostAsJsonAsync("/api/members", request);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);

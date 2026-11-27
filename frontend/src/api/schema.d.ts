@@ -894,6 +894,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/members/fixed-desks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active fixed desks with the member who has each one – choices for the member form. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The desks, sorted by code (may be empty). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FixedDeskOption"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/members/{id}": {
         parameters: {
             query?: never;
@@ -2926,6 +2962,29 @@ export interface components {
             id: number;
             /** @description Workspace code, e.g. "OS-25". */
             code: string;
+        };
+        /**
+         * @description A fixed desk reception can assign to a member (CW-28): the choices for the "Fixed desk" field
+         *     of the member form. Reception can't use /api/workspaces (manager only), so this is the narrow
+         *     read-only view it needs.
+         */
+        FixedDeskOption: {
+            /**
+             * Format: int32
+             * @description Workspace id.
+             */
+            id: number;
+            /** @description Workspace code, e.g. "OS-25". */
+            code: string;
+            /** @description Room the desk is in. */
+            roomName: string;
+            /**
+             * Format: int32
+             * @description The member who has it, or null when it is free.
+             */
+            assignedMemberId: null | number;
+            /** @description "First Last" of that member, or null. */
+            assignedMemberName: null | string;
         };
         HttpValidationProblemDetails: {
             type?: null | string;

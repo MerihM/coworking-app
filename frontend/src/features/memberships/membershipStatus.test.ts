@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Membership } from "./membershipsApi";
-import { summarizeMemberships } from "./membershipStatus";
+import { paymentStartDate, summarizeMemberships } from "./membershipStatus";
 
 /** A membership with sensible defaults; only the fields a test cares about are passed. */
 function membership(overrides: Partial<Membership>): Membership {
@@ -68,5 +68,17 @@ describe("summarizeMemberships", () => {
 
     expect(summary.unpaid?.id).toBe(5);
     expect(summary.current).toBeUndefined();
+  });
+});
+
+describe("paymentStartDate (BR05 preview)", () => {
+  it("starts today when there is no valid membership", () => {
+    expect(paymentStartDate(null, "2026-12-01")).toBe("2026-12-01");
+    expect(paymentStartDate("2026-11-30", "2026-12-01")).toBe("2026-12-01");
+  });
+
+  it("starts the day after the current membership's last day (renewal)", () => {
+    expect(paymentStartDate("2026-12-26", "2026-12-01")).toBe("2026-12-27");
+    expect(paymentStartDate("2026-12-01", "2026-12-01")).toBe("2026-12-02");
   });
 });

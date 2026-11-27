@@ -15,6 +15,14 @@ public interface IMemberService
     /// <returns>The page.</returns>
     Task<PagedResult<MemberResponse>> ListAsync(ListMembersQuery query, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Active fixed desks in active rooms, sorted by code, each with the member who has it
+    /// (CW-28: choices for the member form).
+    /// </summary>
+    /// <param name="cancellationToken">Cancels the query.</param>
+    /// <returns>The desks (35 at most in the demo center, so no paging).</returns>
+    Task<IReadOnlyList<FixedDeskOption>> ListFixedDesksAsync(CancellationToken cancellationToken = default);
+
     /// <summary>One member.</summary>
     /// <param name="id">Member id.</param>
     /// <param name="cancellationToken">Cancels the query.</param>
