@@ -20,7 +20,8 @@ type NavItem = {
     | "nav.members"
     | "nav.payments"
     | "nav.myReservations"
-    | "nav.reservations";
+    | "nav.reservations"
+    | "nav.report";
   /** Show only to logged-in users. */
   requiresAuth?: boolean;
   /** Show only to these roles (implies requiresAuth). */
@@ -52,6 +53,7 @@ const navItems: readonly NavItem[] = [
   { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
   { to: "/manage/rooms", labelKey: "nav.spaces", roles: [Roles.Manager] }, // CW-23
   { to: "/manage/membership-types", labelKey: "nav.membershipTypes", roles: [Roles.Manager] }, // CW-24
+  { to: "/manage/reports", labelKey: "nav.report", roles: [Roles.Manager] }, // CW-33, FR11
 ];
 
 /**

@@ -18,6 +18,7 @@ import { NotFoundPage } from "../pages/NotFoundPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { StaffListPage } from "../pages/admin/StaffListPage";
 import { MembershipTypesPage } from "../pages/manage/MembershipTypesPage";
+import { ReportPage } from "../pages/manage/ReportPage";
 import { MyMembershipPage } from "../pages/member/MyMembershipPage";
 import { MyReservationsPage } from "../pages/member/MyReservationsPage";
 import { MemberDetailPage } from "../pages/reception/MemberDetailPage";
@@ -88,6 +89,7 @@ export const router = createBrowserRouter([
               { path: "manage/rooms", Component: RoomsListPage }, // CW-23
               { path: "manage/rooms/:roomId", Component: RoomDetailPage }, // CW-23
               { path: "manage/membership-types", Component: MembershipTypesPage }, // CW-24
+              { path: "manage/reports", Component: ReportPage }, // CW-33, FR11 (TC08: Manager only)
             ],
           },
         ],

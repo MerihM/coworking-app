@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import i18n from "../i18n";
-import { formatDate, formatDuration, formatLongDate, formatPrice } from "./format";
+import {
+  formatDate,
+  formatDuration,
+  formatLongDate,
+  formatNumber,
+  formatPercent,
+  formatPrice,
+} from "./format";
 
 /** Intl puts a no-break space between number and currency; compare with plain spaces. */
 const plain = (text: string) => text.replace(/\s/g, " ");
@@ -60,5 +67,20 @@ describe("formatDate", () => {
     const text = formatDate("2026-12-26", "bs");
     expect(text).toContain("26");
     expect(text).toContain("2026");
+  });
+});
+
+describe("formatPercent and formatNumber (FR11 report)", () => {
+  it("writes rates with at most one decimal", () => {
+    expect(formatPercent(0.1333, "en")).toBe("13.3%");
+    expect(formatPercent(1, "en")).toBe("100%");
+    // Space before % or not depends on the Intl data of the runtime.
+    expect(plain(formatPercent(0.1333, "bs"))).toMatch(/^13,3 ?%$/);
+  });
+
+  it("writes hour counts with grouping and at most one decimal", () => {
+    expect(formatNumber(10063, "en")).toBe("10,063");
+    expect(formatNumber(1.25, "en")).toBe("1.3");
+    expect(formatNumber(0.5, "bs")).toBe("0,5");
   });
 });
