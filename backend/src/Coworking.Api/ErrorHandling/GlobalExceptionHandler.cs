@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Coworking.Application.Common.Exceptions;
+using Coworking.Application.Reservations;
 using Coworking.Domain.Common;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
@@ -117,6 +118,22 @@ internal sealed class GlobalExceptionHandler(
                     Extensions = { ["code"] = DuplicateCode },
                 },
 
+            // 409 (CW-29): BR01 at the database level. Two members asked for the same workspace and
+            // time at the same moment; both passed the service's "is it free?" check, and the EXCLUDE
+            // constraint ex_reservations_no_overlap let only the first INSERT through (SqlState 23P01).
+            // Same answer as the service check, so the UI offers alternatives either way (UC06).
+            DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.ExclusionViolation } } =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "The request conflicts with the current state.",
+                    Detail = "This workspace has just been reserved for that time.",
+                    Extensions =
+                    {
+                        ["code"] = ReservationErrorCodes.SlotTaken,
+                        ["ruleCode"] = "BR01",
+                    },
+                },
             // 409 (CW-12): DELETE refused by a foreign key, e.g. an employee who recorded payments.
             // History must stay, so the row can't go; the client should deactivate it instead.
             // PostgreSQL uses two codes for this: 23001 (restrict_violation) when the foreign key is

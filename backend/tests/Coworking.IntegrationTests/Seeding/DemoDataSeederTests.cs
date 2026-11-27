@@ -59,8 +59,12 @@ public class DemoDataSeederTests(PostgresApiFactory factory) : IClassFixture<Pos
         );
 
         Assert.Equal(new DemoDataSeedResult(6, 35, 4, 0), first);
-        // The demo member is created in this run, so it also gets its paid demo membership (CW-26).
-        Assert.Equal(new DemoDataSeedResult(0, 0, 0, 2) { Memberships = 1 }, second); // receptionist already existed
+        // The demo member is created in this run, so it also gets its paid demo membership (CW-26)
+        // and its two upcoming reservations (CW-29).
+        Assert.Equal(
+            new DemoDataSeedResult(0, 0, 0, 2) { Memberships = 1, Reservations = 2 },
+            second
+        ); // receptionist already existed
         Assert.Equal(DemoDataSeedResult.Nothing, third);
 
         await using var scope = factory.Services.CreateAsyncScope();

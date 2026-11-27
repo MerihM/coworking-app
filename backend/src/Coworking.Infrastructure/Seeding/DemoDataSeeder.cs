@@ -1,6 +1,8 @@
 using Coworking.Application.Auth.Validators;
+using Coworking.Application.Availability;
 using Coworking.Application.Common;
 using Coworking.Application.Common.Abstractions;
+using Coworking.Domain.Common;
 using Coworking.Domain.Entities;
 using Coworking.Domain.Enums;
 using Coworking.Infrastructure.Persistence;
@@ -20,6 +22,9 @@ public sealed record DemoDataSeedResult(int Rooms, int Workspaces, int Membershi
 {
     /// <summary>Paid demo memberships inserted (0 or 1, CW-26). Not positional, so existing callers keep compiling.</summary>
     public int Memberships { get; init; }
+
+    /// <summary>Upcoming demo reservations inserted (0–2, CW-29).</summary>
+    public int Reservations { get; init; }
 
     /// <summary>Nothing was inserted.</summary>
     public static DemoDataSeedResult Nothing { get; } = new(0, 0, 0, 0);
@@ -101,8 +106,13 @@ public static class DemoDataSeeder
             var types = await SeedMembershipTypesAsync(db, logger, cancellationToken);
             var accounts = await SeedAccountsAsync(db, passwordHasher, time, options, logger, cancellationToken);
             var memberships = await SeedDemoMembershipAsync(db, time, logger, cancellationToken);
+            var reservations = await SeedDemoReservationsAsync(db, time, logger, cancellationToken);
 
-            return new DemoDataSeedResult(rooms, workspaces, types, accounts) { Memberships = memberships };
+            return new DemoDataSeedResult(rooms, workspaces, types, accounts)
+            {
+                Memberships = memberships,
+                Reservations = reservations,
+            };
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -279,5 +289,81 @@ public static class DemoDataSeeder
 
         logger.LogInformation("Seeded a paid demo membership ({Type}) for the demo member", type.Name);
         return 1;
+    }
+
+    /// <summary>
+    /// Gives the demo member the upcoming reservations of <see cref="DemoData.Reservations"/> on the
+    /// next weekday (CW-29). Goes through Reservation.Create, so BR04 and BR02 apply, and skips a
+    /// workspace that is missing, deactivated or already taken (BR01).
+    /// </summary>
+    /// <remarks>
+    /// Runs only when the demo member has NO reservations at all, so a restart never adds more and
+    /// a reservation the developer cancelled while testing doesn't come back.
+    /// </remarks>
+    private static async Task<int> SeedDemoReservationsAsync(
+        CoworkingDbContext db,
+        TimeProvider time,
+        ILogger logger,
+        CancellationToken cancellationToken
+    )
+    {
+        var memberEmail = DemoData.Accounts.Single(a => a.Role is null).Email;
+        var member = await db
+            .Members.Include(m => m.Memberships)
+            .SingleOrDefaultAsync(m => m.Email == memberEmail && m.IsActive, cancellationToken);
+        if (member is null || await db.Reservations.AnyAsync(r => r.MemberId == member.Id, cancellationToken))
+        {
+            logger.LogInformation("Demo member missing, inactive or already has reservations; skipping demo reservations");
+            return 0;
+        }
+
+        var now = time.GetUtcNow();
+
+        // The next Monday–Friday after today (Sarajevo), so the reservations are in the future.
+        var day = CenterTimeZone.ToLocalDate(now).AddDays(1);
+        while (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+        {
+            day = day.AddDays(1);
+        }
+
+        if (!member.HasActiveMembershipOn(day))
+        {
+            logger.LogInformation("The demo member has no active membership on {Day}; skipping demo reservations", day);
+            return 0;
+        }
+
+        var codes = DemoData.Reservations.Select(r => r.WorkspaceCode).ToList();
+        var workspaces = await db
+            .Workspaces.Include(w => w.Room)
+            .Where(w => codes.Contains(w.Code))
+            .ToListAsync(cancellationToken);
+
+        var created = 0;
+        foreach (var seed in DemoData.Reservations)
+        {
+            var workspace = workspaces.SingleOrDefault(w => w.Code == seed.WorkspaceCode);
+            if (workspace is not { IsActive: true, Room.IsActive: true })
+            {
+                continue;
+            }
+
+            var startsAt = CenterTimeZone.FromLocal(day, seed.From);
+            var endsAt = CenterTimeZone.FromLocal(day, seed.To);
+            var isFree = await db
+                .Workspaces.Where(w => w.Id == workspace.Id)
+                .FreeBetween(db.Reservations, startsAt, endsAt)
+                .AnyAsync(cancellationToken);
+            if (!isFree)
+            {
+                continue;
+            }
+
+            db.Reservations.Add(Reservation.Create(member, workspace, startsAt, endsAt, now));
+            created++;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Seeded {Count} demo reservations for {Day}", created, day);
+        return created;
     }
 }

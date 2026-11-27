@@ -280,10 +280,84 @@ public static class TestSeed
         return membership.Id;
     }
 
+    /// <summary>
+    /// Gives an EXISTING member (e.g. one from CreateClientAsAsync) a paid membership, recorded
+    /// <paramref name="paidDaysAgo"/> days ago (BR05: it starts on the payment day). 0 = active from
+    /// today for <paramref name="durationDays"/> days; 40 with 30 days = already expired (TC02).
+    /// </summary>
+    /// <param name="factory">A factory with a database.</param>
+    /// <param name="memberId">The member.</param>
+    /// <param name="paidDaysAgo">How long ago it was paid.</param>
+    /// <param name="durationDays">Duration of the membership type.</param>
+    public static async Task GivePaidMembershipAsync(
+        this PostgresApiFactory factory,
+        int memberId,
+        int paidDaysAgo = 0,
+        int durationDays = 30
+    )
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
+        var paidAt = DateTimeOffset.UtcNow.AddDays(-paidDaysAgo);
+
+        var member = await db.Members.Include(m => m.Memberships).SingleAsync(m => m.Id == memberId);
+        var receptionist = new Employee("Test", "Receptionist", UniqueEmail("receptionist"), UnusedHash, EmployeeRole.Receptionist);
+        var membership = member.PurchaseMembership(
+            new MembershipType($"Monthly {UniqueTag()}", durationDays, 120m),
+            paidAt
+        );
+        receptionist.RecordPayment(membership, membership.Price, PaymentMethod.Cash, paidAt);
+
+        db.Employees.Add(receptionist);
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Inserts a Confirmed reservation with plain SQL, WITHOUT the domain rules. Only for periods the
+    /// domain would refuse to create but that exist in real life – e.g. "starts in 1 hour" (TC06) when
+    /// the test runs at night, outside working hours (BR04 is checked when a reservation is made,
+    /// not when it is cancelled). The EXCLUDE constraint still applies.
+    /// </summary>
+    /// <param name="factory">A factory with a database.</param>
+    /// <param name="memberId">The member.</param>
+    /// <param name="workspaceId">The workspace.</param>
+    /// <param name="startsAt">Start; use whole minutes (the id is looked up by it).</param>
+    /// <param name="endsAt">End.</param>
+    /// <returns>The new reservation's id.</returns>
+    public static async Task<int> InsertReservationAsync(
+        this PostgresApiFactory factory,
+        int memberId,
+        int workspaceId,
+        DateTimeOffset startsAt,
+        DateTimeOffset endsAt
+    )
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoworkingDbContext>();
+        var start = startsAt.ToUniversalTime();
+        var end = endsAt.ToUniversalTime();
+        var createdAt = DateTimeOffset.UtcNow;
+
+        // Interpolated values become SQL parameters (no injection, correct timestamptz types).
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO reservations (member_id, workspace_id, starts_at, ends_at, created_at, status) VALUES ({memberId}, {workspaceId}, {start}, {end}, {createdAt}, 'Confirmed')"
+        );
+
+        return await db
+            .Reservations.Where(r => r.WorkspaceId == workspaceId && r.StartsAt == start)
+            .Select(r => r.Id)
+            .SingleAsync();
+    }
+
     /// <summary>The <c>code</c> field of a ProblemDetails response.</summary>
     /// <param name="response">An error response.</param>
     public static async Task<string?> ReadCodeAsync(HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString();
+
+    /// <summary>The <c>ruleCode</c> field of a ProblemDetails response (BR01–BR05).</summary>
+    /// <param name="response">An error response.</param>
+    public static async Task<string?> ReadRuleCodeAsync(HttpResponseMessage response) =>
+        (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("ruleCode").GetString();
 
     private static string UniqueEmail(string prefix) => $"{prefix}-{Guid.NewGuid():N}@example.com";
 
