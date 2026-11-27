@@ -30,6 +30,11 @@ const codeMessageKeys = {
   "memberships.type_inactive": "errors.membershipTypeInactive",
   "memberships.unpaid_exists": "errors.unpaidExists",
   "memberships.already_paid": "errors.alreadyPaid",
+  // CW-29/30: reservations. A past start uses the same sentence as the search.
+  "reservations.workspace_unavailable": "errors.workspaceUnavailable",
+  "reservations.in_past": "errors.inPast",
+  "reservations.slot_taken": "errors.slotTaken",
+  "reservations.not_cancellable": "errors.notCancellable",
 } as const;
 
 /**
@@ -38,6 +43,10 @@ const codeMessageKeys = {
  * UI shows its own translated sentence instead.
  */
 const ruleMessageKeys = {
+  // CW-30: no active membership on the reservation date (the UI also offers buying one).
+  BR02: "errors.noActiveMembership",
+  // CW-31: a member cancelling less than 2 hours before the start.
+  BR03: "errors.cancelTooLate",
   BR04: "errors.outsideWorkingHours",
   // CW-26: a payment whose amount differs from the membership price.
   BR05: "errors.paymentAmount",
