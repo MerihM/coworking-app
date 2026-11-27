@@ -69,3 +69,16 @@ export function formatDate(isoDate: string, language: string | undefined): strin
     timeZone: "UTC", // same trick as formatLongDate: the visitor's time zone can't move the day
   }).format(new Date(`${isoDate}T00:00:00Z`));
 }
+
+/** 0.1333 → "13.3%" (en) / "13,3%" (bs) – occupancy rates of the FR11 report. */
+export function formatPercent(rate: number, language: string | undefined): string {
+  return new Intl.NumberFormat(numberLocale(language), {
+    style: "percent",
+    maximumFractionDigits: 1,
+  }).format(rate);
+}
+
+/** 1234.5 → "1,234.5" (en) / "1.234,5" (bs) – hour counts of the FR11 report, without the unit. */
+export function formatNumber(value: number, language: string | undefined): string {
+  return new Intl.NumberFormat(numberLocale(language), { maximumFractionDigits: 1 }).format(value);
+}
