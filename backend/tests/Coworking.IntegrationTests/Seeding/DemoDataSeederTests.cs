@@ -41,7 +41,10 @@ public class DemoDataSeederTests(PostgresApiFactory factory) : IClassFixture<Pos
         await SeedEmployeeAsync("receptionist@coworking.ba", "Original", EmployeeRole.Receptionist);
 
         // 1st run WITHOUT a demo password: the center and prices, but no accounts.
-        var first = await DemoDataSeeder.SeedAsync(factory.Services, new DemoDataOptions { DemoData = true });
+        var first = await DemoDataSeeder.SeedAsync(
+            factory.Services,
+            new DemoDataOptions { DemoData = true }
+        );
 
         // 2nd run WITH the password: rooms and prices exist now → only the missing accounts.
         var second = await DemoDataSeeder.SeedAsync(
@@ -56,7 +59,8 @@ public class DemoDataSeederTests(PostgresApiFactory factory) : IClassFixture<Pos
         );
 
         Assert.Equal(new DemoDataSeedResult(6, 35, 4, 0), first);
-        Assert.Equal(new DemoDataSeedResult(0, 0, 0, 2), second); // receptionist already existed
+        // The demo member is created in this run, so it also gets its paid demo membership (CW-26).
+        Assert.Equal(new DemoDataSeedResult(0, 0, 0, 2) { Memberships = 1 }, second); // receptionist already existed
         Assert.Equal(DemoDataSeedResult.Nothing, third);
 
         await using var scope = factory.Services.CreateAsyncScope();
@@ -71,7 +75,10 @@ public class DemoDataSeederTests(PostgresApiFactory factory) : IClassFixture<Pos
 
         // Price list: 4 types, the student one not offered.
         Assert.Equal(4, await db.MembershipTypes.CountAsync());
-        Assert.Equal("Student Monthly", (await db.MembershipTypes.SingleAsync(t => !t.IsActive)).Name);
+        Assert.Equal(
+            "Student Monthly",
+            (await db.MembershipTypes.SingleAsync(t => !t.IsActive)).Name
+        );
 
         // The hand-made receptionist was not overwritten.
         Assert.Equal(
@@ -127,7 +134,10 @@ public class DemoDataSeederTests(PostgresApiFactory factory) : IClassFixture<Pos
     private async Task<string> LoginRoleAsync(string email)
     {
         using var client = factory.CreateHttpsClient();
-        var response = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, DemoPassword));
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(email, DemoPassword)
+        );
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<AuthResponse>())!.User.Role;
     }

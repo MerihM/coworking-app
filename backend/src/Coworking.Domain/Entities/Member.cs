@@ -89,6 +89,18 @@ public class Member : Entity
         Phone = phone.Trim();
     }
 
+    /// <summary>
+    /// Changes the login e-mail (FR08, the receptionist edits a member). Stored trimmed and in lower
+    /// case, like in the constructor. Uniqueness across members AND employees is checked by the
+    /// service first; the unique index on members.email is the safety net.
+    /// </summary>
+    /// <param name="email">The new e-mail.</param>
+    public void ChangeEmail(string email)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        Email = email.Trim().ToLowerInvariant();
+    }
+
     /// <summary>Replaces the password hash (password change, Sprint 2).</summary>
     /// <param name="passwordHash">The new hash.</param>
     public void ChangePasswordHash(string passwordHash)

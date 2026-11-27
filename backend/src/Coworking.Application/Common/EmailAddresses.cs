@@ -46,4 +46,29 @@ public static class EmailAddresses
                 cancellationToken
             );
     }
+
+    /// <summary>
+    /// Same check as <see cref="IsEmailTakenAsync"/>, but ignores one MEMBER: editing a member
+    /// (FR08) keeps their own e-mail without a false "already taken".
+    /// </summary>
+    /// <param name="db">The database.</param>
+    /// <param name="normalizedEmail">Result of <see cref="Normalize"/>.</param>
+    /// <param name="exceptMemberId">The member being edited.</param>
+    /// <param name="cancellationToken">Cancels the queries.</param>
+    /// <returns><c>true</c> when another member or any employee already uses the e-mail.</returns>
+    public static async Task<bool> IsEmailTakenExceptMemberAsync(
+        this IAppDbContext db,
+        string normalizedEmail,
+        int exceptMemberId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(db);
+
+        return await db.Members.AnyAsync(
+                m => m.Email == normalizedEmail && m.Id != exceptMemberId,
+                cancellationToken
+            )
+            || await db.Employees.AnyAsync(e => e.Email == normalizedEmail, cancellationToken);
+    }
 }

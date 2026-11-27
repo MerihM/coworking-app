@@ -2,6 +2,7 @@ using Coworking.Application.Auth.Validators;
 using Coworking.Application.Common;
 using Coworking.Application.Common.Abstractions;
 using Coworking.Domain.Entities;
+using Coworking.Domain.Enums;
 using Coworking.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +18,9 @@ namespace Coworking.Infrastructure.Seeding;
 /// <param name="Accounts">Demo accounts inserted.</param>
 public sealed record DemoDataSeedResult(int Rooms, int Workspaces, int MembershipTypes, int Accounts)
 {
+    /// <summary>Paid demo memberships inserted (0 or 1, CW-26). Not positional, so existing callers keep compiling.</summary>
+    public int Memberships { get; init; }
+
     /// <summary>Nothing was inserted.</summary>
     public static DemoDataSeedResult Nothing { get; } = new(0, 0, 0, 0);
 }
@@ -96,8 +100,9 @@ public static class DemoDataSeeder
             var (rooms, workspaces) = await SeedRoomsAsync(db, logger, cancellationToken);
             var types = await SeedMembershipTypesAsync(db, logger, cancellationToken);
             var accounts = await SeedAccountsAsync(db, passwordHasher, time, options, logger, cancellationToken);
+            var memberships = await SeedDemoMembershipAsync(db, time, logger, cancellationToken);
 
-            return new DemoDataSeedResult(rooms, workspaces, types, accounts);
+            return new DemoDataSeedResult(rooms, workspaces, types, accounts) { Memberships = memberships };
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -223,5 +228,56 @@ public static class DemoDataSeeder
         // Never log the password (NFR01) – only how many accounts were created.
         logger.LogInformation("Seeded {Count} demo accounts", created);
         return created;
+    }
+
+    /// <summary>
+    /// Gives the demo member a PAID membership of <see cref="DemoData.DemoMembershipTypeName"/>,
+    /// recorded by the demo receptionist (CW-26). Goes through the domain (PurchaseMembership +
+    /// RecordPayment), so BR05 sets the period exactly like a real payment at the desk.
+    /// </summary>
+    /// <remarks>
+    /// Runs only when the demo member has NO memberships at all: once they bought or were sold
+    /// anything (by hand, while testing), a restart must not add another one.
+    /// </remarks>
+    private static async Task<int> SeedDemoMembershipAsync(
+        CoworkingDbContext db,
+        TimeProvider time,
+        ILogger logger,
+        CancellationToken cancellationToken
+    )
+    {
+        var memberEmail = DemoData.Accounts.Single(a => a.Role is null).Email;
+        var receptionistEmail = DemoData.Accounts.Single(a => a.Role == EmployeeRole.Receptionist).Email;
+
+        var member = await db
+            .Members.Include(m => m.Memberships)
+            .SingleOrDefaultAsync(m => m.Email == memberEmail, cancellationToken);
+        if (member is null || member.Memberships.Count > 0 || !member.IsActive)
+        {
+            logger.LogInformation("Demo member missing, inactive or already has memberships; skipping the demo membership");
+            return 0;
+        }
+
+        var receptionist = await db.Employees.SingleOrDefaultAsync(
+            e => e.Email == receptionistEmail && e.IsActive,
+            cancellationToken
+        );
+        var type = await db.MembershipTypes.FirstOrDefaultAsync(
+            t => t.Name == DemoData.DemoMembershipTypeName && t.IsActive,
+            cancellationToken
+        );
+        if (receptionist is null || type is null)
+        {
+            logger.LogInformation("Demo receptionist or the active demo membership type is missing; skipping the demo membership");
+            return 0;
+        }
+
+        var now = time.GetUtcNow();
+        var membership = member.PurchaseMembership(type, now);
+        receptionist.RecordPayment(membership, membership.Price, PaymentMethod.Cash, now);
+        await db.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Seeded a paid demo membership ({Type}) for the demo member", type.Name);
+        return 1;
     }
 }
