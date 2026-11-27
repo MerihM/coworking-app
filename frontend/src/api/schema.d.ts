@@ -2269,6 +2269,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/occupancy-revenue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Workspace occupancy and revenue for a period of local days (both inclusive, at most 366). */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description First day of the report (inclusive). */
+                    From?: string;
+                    /** @description Last day of the report (inclusive). At most 366 days after DateOnly? ReportPeriodQuery.From, counting both. */
+                    To?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The report. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OccupancyRevenueReport"];
+                    };
+                };
+                /** @description Missing day, the end before the start, or longer than 366 days. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reservations": {
         parameters: {
             query?: never;
@@ -3649,6 +3699,134 @@ export interface components {
              */
             membershipCount: number;
         };
+        /** @description Occupancy of one room. */
+        OccupancyByRoom: {
+            /**
+             * Format: int32
+             * @description Room id.
+             */
+            roomId: number;
+            /** @description Room name. */
+            roomName: string;
+            /**
+             * Format: int32
+             * @description Counted workspaces in the room.
+             */
+            workspaceCount: number;
+            /**
+             * Format: double
+             * @description Their opening hours together.
+             */
+            availableHours: number;
+            /**
+             * Format: double
+             * @description Their reserved hours.
+             */
+            reservedHours: number;
+            /**
+             * Format: double
+             * @description Reserved ÷ available.
+             */
+            occupancyRate: number;
+            /**
+             * Format: int32
+             * @description Non-cancelled reservations.
+             */
+            reservationCount: number;
+        };
+        /** @description Occupancy of one workspace type. */
+        OccupancyByType: {
+            /** @description The type. */
+            type: components["schemas"]["WorkspaceType"];
+            /**
+             * Format: int32
+             * @description Counted workspaces of this type.
+             */
+            workspaceCount: number;
+            /**
+             * Format: double
+             * @description Their opening hours together.
+             */
+            availableHours: number;
+            /**
+             * Format: double
+             * @description Their reserved hours.
+             */
+            reservedHours: number;
+            /**
+             * Format: double
+             * @description Reserved ÷ available.
+             */
+            occupancyRate: number;
+            /**
+             * Format: int32
+             * @description Non-cancelled reservations.
+             */
+            reservationCount: number;
+        };
+        /**
+         * @description Occupancy = reserved hours ÷ available hours. Available = opening hours (BR04) × counted
+         *     workspaces. Counted are reservable workspaces (not fixed desks) that are offered now or had a
+         *     reservation in the period. Reserved = the part of every non-cancelled reservation inside the period.
+         */
+        OccupancyReport: {
+            /**
+             * Format: double
+             * @description Opening hours of all counted workspaces together.
+             */
+            availableHours: number;
+            /**
+             * Format: double
+             * @description Reserved hours (confirmed and completed reservations).
+             */
+            reservedHours: number;
+            /**
+             * Format: double
+             * @description Reserved ÷ available, 0–1 with 4 decimals.
+             */
+            occupancyRate: number;
+            /**
+             * Format: int32
+             * @description Non-cancelled reservations in the period.
+             */
+            reservationCount: number;
+            /**
+             * Format: int32
+             * @description Cancelled reservations in the period.
+             */
+            cancelledCount: number;
+            /** @description Per workspace type (hot desk, office, meeting room). */
+            byType: components["schemas"]["OccupancyByType"][];
+            /** @description Per room, by floor and name. */
+            byRoom: components["schemas"]["OccupancyByRoom"][];
+            /** @description Per workspace, highest occupancy first. */
+            workspaces: components["schemas"]["WorkspaceOccupancy"][];
+        };
+        /**
+         * @description The FR11 / UC13 report: workspace occupancy and revenue for a period. Calculated on request from
+         *     the reservations and payments and never stored – the design document says "Izvještaj nije klasa".
+         */
+        OccupancyRevenueReport: {
+            /**
+             * Format: date
+             * @description First local day of the period (inclusive).
+             */
+            from: string;
+            /**
+             * Format: date
+             * @description Last local day of the period (inclusive).
+             */
+            to: string;
+            /**
+             * Format: date-time
+             * @description When the report was calculated (UTC).
+             */
+            generatedAt: string;
+            /** @description Workspace occupancy. */
+            occupancy: components["schemas"]["OccupancyReport"];
+            /** @description Revenue from membership payments. */
+            revenue: components["schemas"]["RevenueReport"];
+        };
         /** @description One page of a list plus what the frontend needs to draw the pager. */
         PagedResultOfEmployeeResponse: {
             /** @description The items on this page (may be empty). */
@@ -3982,6 +4160,78 @@ export interface components {
             /** @description The new password (password policy applies). */
             newPassword: string;
         };
+        /** @description Revenue of one local day. */
+        RevenueByDay: {
+            /**
+             * Format: date
+             * @description The local Sarajevo day.
+             */
+            date: string;
+            /**
+             * Format: int32
+             * @description Payments.
+             */
+            paymentCount: number;
+            /**
+             * Format: double
+             * @description Sum in KM.
+             */
+            total: number;
+        };
+        /** @description Revenue of one membership type. */
+        RevenueByMembershipType: {
+            /**
+             * Format: int32
+             * @description Membership type id.
+             */
+            membershipTypeId: number;
+            /** @description Its current name. */
+            name: string;
+            /**
+             * Format: int32
+             * @description Payments.
+             */
+            paymentCount: number;
+            /**
+             * Format: double
+             * @description Sum in KM.
+             */
+            total: number;
+        };
+        /** @description Revenue of one payment method. */
+        RevenueByMethod: {
+            /** @description Cash or Card. */
+            method: components["schemas"]["PaymentMethod"];
+            /**
+             * Format: int32
+             * @description Payments.
+             */
+            paymentCount: number;
+            /**
+             * Format: double
+             * @description Sum in KM.
+             */
+            total: number;
+        };
+        /** @description Revenue = the recorded membership payments of the period (BR05: a membership counts once it is paid). */
+        RevenueReport: {
+            /**
+             * Format: double
+             * @description Sum of all payments in KM.
+             */
+            total: number;
+            /**
+             * Format: int32
+             * @description Number of payments.
+             */
+            paymentCount: number;
+            /** @description Per membership type, highest total first. */
+            byMembershipType: components["schemas"]["RevenueByMembershipType"][];
+            /** @description Per payment method (always both Cash and Card). */
+            byMethod: components["schemas"]["RevenueByMethod"][];
+            /** @description Per local day, only days with payments, oldest first. */
+            byDay: components["schemas"]["RevenueByDay"][];
+        };
         /** @description A room as shown in the manager's list and edit form (FR09). */
         RoomResponse: {
             /**
@@ -4111,6 +4361,40 @@ export interface components {
             email: string;
             /** @description Display name for the header/user menu. */
             fullName: string;
+        };
+        /** @description Occupancy of one workspace. */
+        WorkspaceOccupancy: {
+            /**
+             * Format: int32
+             * @description Workspace id.
+             */
+            workspaceId: number;
+            /** @description Workspace code, e.g. OS-01. */
+            code: string;
+            /** @description Workspace type. */
+            type: components["schemas"]["WorkspaceType"];
+            /** @description Room it is in. */
+            roomName: string;
+            /**
+             * Format: double
+             * @description Its opening hours in the period.
+             */
+            availableHours: number;
+            /**
+             * Format: double
+             * @description Its reserved hours.
+             */
+            reservedHours: number;
+            /**
+             * Format: double
+             * @description Reserved ÷ available.
+             */
+            occupancyRate: number;
+            /**
+             * Format: int32
+             * @description Non-cancelled reservations.
+             */
+            reservationCount: number;
         };
         /** @description A workspace as shown in the manager's list and edit form (FR09). */
         WorkspaceResponse: {

@@ -6,7 +6,9 @@ namespace Coworking.IntegrationTests.Fixtures;
 
 /// <summary>
 /// One test-only endpoint per authorization policy, so every policy can be tested before the
-/// real endpoints that use it exist (rooms, reports, reservations come in Sprints 3–6).
+/// real endpoints that use it exist (rooms, reports, reservations came in Sprints 3–6).
+/// The FR11 stand-in that TC08 used until Sprint 6 is gone: TC08 now runs against the real
+/// report endpoint in Reports/ReportsEndpointsTests (CW-32).
 /// Added to the app by AuthTestingApiFactory (it registers the whole test assembly).
 /// </summary>
 [ApiController]
@@ -35,12 +37,4 @@ public sealed class PolicyTestController : ControllerBase
     [HttpGet("member")]
     [Authorize(Policy = Policies.MemberOnly)]
     public IActionResult Member() => Ok();
-
-    /// <summary>
-    /// Stand-in for FR11 "occupancy and revenue report" (UC13), protected exactly like the real
-    /// report endpoint will be. TC08 runs against this until Sprint 6, then moves to the real one.
-    /// </summary>
-    [HttpGet("reports")]
-    [Authorize(Policy = Policies.ManagerOnly)]
-    public IActionResult Reports() => Ok(new { occupancy = 0.75, revenue = 1234.50m });
 }

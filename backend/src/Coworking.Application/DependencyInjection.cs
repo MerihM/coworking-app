@@ -4,6 +4,7 @@ using Coworking.Application.Employees;
 using Coworking.Application.Members;
 using Coworking.Application.Memberships;
 using Coworking.Application.MembershipTypes;
+using Coworking.Application.Reports;
 using Coworking.Application.Reservations;
 using Coworking.Application.Rooms;
 using Coworking.Application.Workspaces;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IMemberService, MemberService>();
         services.AddScoped<IMembershipService, MembershipService>();
         services.AddScoped<IReservationService, ReservationService>();
+        services.AddScoped<IReportService, ReportService>(); // FR11 (CW-32)
 
         return services;
     }
