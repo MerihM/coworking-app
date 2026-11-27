@@ -19,9 +19,11 @@ import { RegisterPage } from "../pages/RegisterPage";
 import { StaffListPage } from "../pages/admin/StaffListPage";
 import { MembershipTypesPage } from "../pages/manage/MembershipTypesPage";
 import { MyMembershipPage } from "../pages/member/MyMembershipPage";
+import { MyReservationsPage } from "../pages/member/MyReservationsPage";
 import { MemberDetailPage } from "../pages/reception/MemberDetailPage";
 import { MembersListPage } from "../pages/reception/MembersListPage";
 import { PaymentsPage } from "../pages/reception/PaymentsPage";
+import { ReservationsPage } from "../pages/reception/ReservationsPage";
 import { RoomDetailPage } from "../pages/manage/RoomDetailPage";
 import { RoomsListPage } from "../pages/manage/RoomsListPage";
 
@@ -56,10 +58,14 @@ export const router = createBrowserRouter([
           },
 
           // Member only (FR03): my membership – buy, cancel an unpaid order, history (CW-27).
+          // FR05/FR06: my reservations – upcoming, past, cancel (CW-31).
           {
             Component: RequireRole,
             handle: { roles: [Roles.Member] } satisfies RouteHandle,
-            children: [{ path: "memberships", Component: MyMembershipPage }],
+            children: [
+              { path: "memberships", Component: MyMembershipPage },
+              { path: "reservations", Component: MyReservationsPage },
+            ],
           },
 
           // Reception: Receptionist or Manager (FR07, FR08 – CW-28). The administrator gets /forbidden.
@@ -70,6 +76,7 @@ export const router = createBrowserRouter([
               { path: "reception/members", Component: MembersListPage },
               { path: "reception/members/:memberId", Component: MemberDetailPage },
               { path: "reception/payments", Component: PaymentsPage },
+              { path: "reception/reservations", Component: ReservationsPage }, // CW-31
             ],
           },
 
