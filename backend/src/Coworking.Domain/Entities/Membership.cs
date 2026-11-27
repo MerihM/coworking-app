@@ -70,6 +70,20 @@ public class Membership : Entity
     public bool IsActiveOn(DateOnly date) =>
         Status == MembershipStatus.Active && StartDate <= date && date < EndDate;
 
+    /// <summary>
+    /// The status as the user should see it on <paramref name="today"/>: a paid membership whose
+    /// period is over is shown as Expired even while the stored status is still Active.
+    /// </summary>
+    /// <remarks>
+    /// Why derived instead of stored (CW-26): nothing runs at midnight to flip the status, and a
+    /// background job would be one more moving part. BR02 never depended on the stored value anyway
+    /// – <see cref="IsActiveOn"/> checks the dates – so deriving it on read is always correct.
+    /// </remarks>
+    /// <param name="today">Current local (Sarajevo) date.</param>
+    /// <returns>Unpaid, Active (also for a paid renewal that starts later) or Expired.</returns>
+    public MembershipStatus EffectiveStatusOn(DateOnly today) =>
+        Status == MembershipStatus.Active && EndDate <= today ? MembershipStatus.Expired : Status;
+
     /// <summary>Marks an active membership as expired once its period is over (for overviews and reports).</summary>
     /// <param name="today">Current local date.</param>
     public void ExpireIfEnded(DateOnly today)

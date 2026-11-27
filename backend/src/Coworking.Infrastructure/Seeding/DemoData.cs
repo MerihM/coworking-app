@@ -74,6 +74,12 @@ public static class DemoData
         new("member@coworking.ba", "Amra", "Hodžić", null),
     ];
 
+    /// <summary>
+    /// Membership type the demo member gets, already paid (CW-26), so the demo member can make
+    /// reservations right away (Sprint 5, BR02).
+    /// </summary>
+    public const string DemoMembershipTypeName = "Monthly";
+
     /// <summary>Phone number of the demo member (required field).</summary>
     public const string MemberPhone = "+387 61 123 456";
 }
