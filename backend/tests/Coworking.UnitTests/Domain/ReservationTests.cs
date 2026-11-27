@@ -120,6 +120,25 @@ public class ReservationTests
         Assert.Throws<DomainException>(() => reservation.CancelByEmployee(NewReceptionist(), Now));
     }
 
+    [Fact]
+    public void EffectiveStatusAt_ConfirmedReservation_IsCompletedFromItsEnd()
+    {
+        var reservation = ConfirmedReservation(10, 12);
+
+        Assert.Equal(ReservationStatus.Confirmed, reservation.EffectiveStatusAt(At(2026, 11, 23, 11, 59)));
+        Assert.Equal(ReservationStatus.Completed, reservation.EffectiveStatusAt(At(2026, 11, 23, 12))); // end is exclusive
+        Assert.Equal(ReservationStatus.Confirmed, reservation.Status); // stored status untouched
+    }
+
+    [Fact]
+    public void EffectiveStatusAt_CancelledReservation_StaysCancelledAfterItsEnd()
+    {
+        var reservation = ConfirmedReservation(10, 12);
+        reservation.CancelByMember(Now);
+
+        Assert.Equal(ReservationStatus.Cancelled, reservation.EffectiveStatusAt(At(2026, 11, 23, 13)));
+    }
+
     /// <summary>A confirmed reservation on Monday 2026-11-23 between the given hours.</summary>
     private static Reservation ConfirmedReservation(int fromHour, int toHour) =>
         Reservation.Create(

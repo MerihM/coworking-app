@@ -133,6 +133,16 @@ public class Reservation : Entity
     public bool CanBeCancelledByMember(DateTimeOffset now) =>
         Status == ReservationStatus.Confirmed && now <= StartsAt - MemberCancellationDeadline;
 
+    /// <summary>
+    /// The status as the user should see it at <paramref name="now"/>: a Confirmed reservation whose
+    /// period has ended is shown as Completed (Iskoristena) – derived on read, like an expired
+    /// membership, so no background job has to update rows (CW-29). The stored status is not changed.
+    /// </summary>
+    /// <param name="now">Current moment.</param>
+    /// <returns>Confirmed, Cancelled or Completed.</returns>
+    public ReservationStatus EffectiveStatusAt(DateTimeOffset now) =>
+        Status == ReservationStatus.Confirmed && now >= EndsAt ? ReservationStatus.Completed : Status;
+
     /// <summary>Cancellation by the member (FR05, UC07; diagram: otkazi()). Enforces BR03.</summary>
     /// <param name="now">Current moment.</param>
     public void CancelByMember(DateTimeOffset now)

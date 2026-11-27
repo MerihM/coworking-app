@@ -80,6 +80,23 @@ public static class DemoData
     /// </summary>
     public const string DemoMembershipTypeName = "Monthly";
 
+    /// <summary>An upcoming demo reservation of the demo member (CW-29).</summary>
+    /// <param name="WorkspaceCode">Workspace from <see cref="Rooms"/>.</param>
+    /// <param name="From">Local start time.</param>
+    /// <param name="To">Local end time.</param>
+    public sealed record ReservationSeed(string WorkspaceCode, TimeOnly From, TimeOnly To);
+
+    /// <summary>
+    /// Two reservations on the next weekday, so "My reservations", the reception list and the report
+    /// have data. Afternoon times on purpose: the seeder test searches 10:00–12:00 and expects every
+    /// workspace to be free then.
+    /// </summary>
+    public static IReadOnlyList<ReservationSeed> Reservations { get; } =
+    [
+        new("OS-01", new TimeOnly(13, 0), new TimeOnly(17, 0)),
+        new("MR-A", new TimeOnly(14, 0), new TimeOnly(16, 0)),
+    ];
+
     /// <summary>Phone number of the demo member (required field).</summary>
     public const string MemberPhone = "+387 61 123 456";
 }

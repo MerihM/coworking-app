@@ -4,6 +4,7 @@ using Coworking.Application.Employees;
 using Coworking.Application.Members;
 using Coworking.Application.Memberships;
 using Coworking.Application.MembershipTypes;
+using Coworking.Application.Reservations;
 using Coworking.Application.Rooms;
 using Coworking.Application.Workspaces;
 using FluentValidation;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IAvailabilityService, AvailabilityService>();
         services.AddScoped<IMemberService, MemberService>();
         services.AddScoped<IMembershipService, MembershipService>();
+        services.AddScoped<IReservationService, ReservationService>();
 
         return services;
     }

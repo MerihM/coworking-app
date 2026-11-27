@@ -2011,6 +2011,423 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reservations/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My reservations: upcoming (soonest first) or past (newest first). */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Upcoming (default) or Past. */
+                    Scope?: components["schemas"]["ReservationScope"];
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfReservationResponse"];
+                    };
+                };
+                /** @description Invalid paging or scope. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Reserves a workspace (UC04). Checks: past → working hours (BR04) → active membership on that
+         *     date (BR02) → workspace free (BR01).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateReservationRequest"];
+                    "text/json": components["schemas"]["CreateReservationRequest"];
+                    "application/*+json": components["schemas"]["CreateReservationRequest"];
+                };
+            };
+            responses: {
+                /** @description The confirmed reservation. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReservationResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Unknown workspace. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The workspace is taken (reservations.slot_taken, ruleCode BR01) – ask for alternatives. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /**
+                 * @description reservations.workspace_unavailable, reservations.in_past, or ruleCode BR04 (working hours) /
+                 *     BR02 (no active membership – offer buying one).
+                 */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/alternatives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * UC06: what to offer when a slot is taken – other free workspaces of the same type at the same
+         *     time, and the next free slots of the same workspace.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The workspace that was taken. Required. */
+                    WorkspaceId?: number;
+                    /** @description Local date. Required. */
+                    Date?: string;
+                    /** @description Local start time, quarter hour. Required. */
+                    From?: string;
+                    /** @description Local end time, quarter hour, after TimeOnly? ReservationAlternativesQuery.From. Required. */
+                    To?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The offers (lists may be empty). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReservationAlternativesResponse"];
+                    };
+                };
+                /** @description Missing or invalid parameters. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Unknown workspace. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Workspace not bookable, or the period breaks BR04. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/mine/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancels my reservation – at the latest 2 hours before it starts (BR03). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Reservation id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cancelled; the workspace is free again. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such reservation of mine. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Already cancelled or ended (reservations.not_cancellable). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Less than 2 hours before the start (ruleCode BR03) – the reception can still cancel it. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists reservations, soonest start first, one page at a time. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only reservations that start on this local Sarajevo date. */
+                    Date?: string;
+                    /** @description Confirmed (not ended yet), Cancelled or Completed (ended) – the derived status. */
+                    Status?: components["schemas"]["ReservationStatus"];
+                    /** @description Part of the member's name or e-mail, or of the workspace code (case-insensitive). */
+                    Search?: string;
+                    /** @description Only this member's reservations (from the member detail page). */
+                    MemberId?: number;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfReservationResponse"];
+                    };
+                };
+                /** @description Invalid paging or filter values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one reservation. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Reservation id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The reservation. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReservationResponse"];
+                    };
+                };
+                /** @description No reservation with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancels a reservation on behalf of the member – any time before it ends (BR03). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Reservation id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cancelled; the workspace is free again. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No reservation with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Already cancelled or ended (reservations.not_cancellable). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rooms": {
         parameters: {
             query?: never;
@@ -2730,6 +3147,58 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description A free period of the requested workspace. */
+        AlternativeSlot: {
+            /**
+             * Format: date
+             * @description Local date.
+             */
+            date: string;
+            /**
+             * Format: time
+             * @description Local start.
+             */
+            from: string;
+            /**
+             * Format: time
+             * @description Local end.
+             */
+            to: string;
+            /**
+             * Format: date-time
+             * @description Start (UTC).
+             */
+            startsAt: string;
+            /**
+             * Format: date-time
+             * @description End (UTC).
+             */
+            endsAt: string;
+        };
+        /** @description Another free workspace for the requested time. */
+        AlternativeWorkspace: {
+            /**
+             * Format: int32
+             * @description Workspace id.
+             */
+            id: number;
+            /** @description Label, e.g. "OS-02". */
+            code: string;
+            /** @description Same type as the requested one. */
+            type: components["schemas"]["WorkspaceType"];
+            /**
+             * Format: int32
+             * @description Number of people.
+             */
+            capacity: number;
+            /**
+             * Format: int32
+             * @description Room id.
+             */
+            roomId: number;
+            /** @description Room name. */
+            roomName: string;
+        };
         /**
          * @description JSON body returned by register, login and refresh. The refresh token is NOT in here: it travels
          *     only in the httpOnly cookie, where JavaScript can't read it.
@@ -2875,6 +3344,33 @@ export interface components {
              * @description 0.01–10 000.00 KM, at most two decimals. Must be a JSON number, not a string.
              */
             price: number;
+        };
+        /**
+         * @description Body of `POST /api/reservations/mine` (UC04 step 3: the member picks a workspace, a date and
+         *     the start and end time). Date and times are LOCAL Sarajevo time, exactly like the availability
+         *     search the member came from; the service converts them to UTC instants (ADR 0002).
+         */
+        CreateReservationRequest: {
+            /**
+             * Format: int32
+             * @description The workspace from the availability results.
+             */
+            workspaceId: number;
+            /**
+             * Format: date
+             * @description Local date, "yyyy-MM-dd"; at most 90 days ahead.
+             */
+            date: string;
+            /**
+             * Format: time
+             * @description Local start, "HH:mm:ss" (a quarter hour, e.g. "10:00:00").
+             */
+            from: string;
+            /**
+             * Format: time
+             * @description Local end, after From, on a quarter hour.
+             */
+            to: string;
         };
         /** @description Body of `POST /api/rooms`: a new room (FR09, UC11). New rooms are active. */
         CreateRoomRequest: {
@@ -3254,6 +3750,31 @@ export interface components {
             totalPages?: number;
         };
         /** @description One page of a list plus what the frontend needs to draw the pager. */
+        PagedResultOfReservationResponse: {
+            /** @description The items on this page (may be empty). */
+            items: components["schemas"]["ReservationResponse"][];
+            /**
+             * Format: int32
+             * @description This page's number (1-based).
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description Requested items per page.
+             */
+            pageSize: number;
+            /**
+             * Format: int32
+             * @description Number of items on ALL pages that match the filters.
+             */
+            totalCount: number;
+            /**
+             * Format: int32
+             * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
+             */
+            totalPages?: number;
+        };
+        /** @description One page of a list plus what the frontend needs to draw the pager. */
         PagedResultOfRoomResponse: {
             /** @description The items on this page (may be empty). */
             items: components["schemas"]["RoomResponse"][];
@@ -3356,6 +3877,106 @@ export interface components {
             /** @description Plain-text password; hashed immediately, never stored or logged. */
             password: string;
         };
+        /**
+         * @description UC06 "Ponudi alternativni termin": what the member can take instead of the occupied slot.
+         *     Accepting an offer = making a normal reservation with it (POST /api/reservations/mine).
+         */
+        ReservationAlternativesResponse: {
+            /**
+             * @description Up to 5 free workspaces of the same type (and at least the same capacity) at the SAME time.
+             *     Workspaces in the same room come first.
+             */
+            otherWorkspaces: components["schemas"]["AlternativeWorkspace"][];
+            /**
+             * @description Up to 3 free slots of the SAME workspace with the same duration: later that day first, then the
+             *     following days (within a week), always inside working hours (BR04).
+             */
+            nextSlots: components["schemas"]["AlternativeSlot"][];
+        };
+        /** @description A reservation as the member (FR06) and the reception see it. */
+        ReservationResponse: {
+            /**
+             * Format: int32
+             * @description Reservation id.
+             */
+            id: number;
+            /**
+             * Format: int32
+             * @description Member id.
+             */
+            memberId: number;
+            /** @description "First Last". */
+            memberName: string;
+            /** @description Member's e-mail (reception searches by it). */
+            memberEmail: string;
+            /**
+             * Format: int32
+             * @description Workspace id.
+             */
+            workspaceId: number;
+            /** @description Workspace label, e.g. "OS-01". */
+            workspaceCode: string;
+            /** @description HotDesk, Office or MeetingRoom. */
+            workspaceType: components["schemas"]["WorkspaceType"];
+            /**
+             * Format: int32
+             * @description Number of people the workspace fits.
+             */
+            capacity: number;
+            /** @description Room the workspace is in. */
+            roomName: string;
+            /**
+             * Format: date-time
+             * @description Start (UTC).
+             */
+            startsAt: string;
+            /**
+             * Format: date-time
+             * @description End (UTC, exclusive).
+             */
+            endsAt: string;
+            /**
+             * Format: date
+             * @description Local Sarajevo date – what the UI shows.
+             */
+            date: string;
+            /**
+             * Format: time
+             * @description Local start time.
+             */
+            from: string;
+            /**
+             * Format: time
+             * @description Local end time.
+             */
+            to: string;
+            /** @description Confirmed, Cancelled or Completed (derived: Confirmed + ended = Completed). */
+            status: components["schemas"]["ReservationStatus"];
+            /**
+             * Format: date-time
+             * @description When it was made (UTC).
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description When it was cancelled (UTC), or null.
+             */
+            cancelledAt: null | string;
+            /** @description Employee who cancelled it ("First Last"); null = the member did, or not cancelled. */
+            cancelledByName: null | string;
+            /** @description BR03: can the member still cancel it themselves (at least 2 h before the start)? */
+            canMemberCancel: boolean;
+        };
+        /**
+         * @description Which part of the member's reservations to list (FR06: "active and previous").
+         * @enum {unknown}
+         */
+        ReservationScope: "Upcoming" | "Past";
+        /**
+         * @description Status of a reservation (design document: StatusRezervacije).
+         * @enum {unknown}
+         */
+        ReservationStatus: "Confirmed" | "Cancelled" | "Completed";
         /** @description Body of `POST /api/employees/{id}/reset-password`. */
         ResetPasswordRequest: {
             /** @description The new password (password policy applies). */
