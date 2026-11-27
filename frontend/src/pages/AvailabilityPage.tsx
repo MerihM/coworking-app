@@ -1,5 +1,7 @@
 // /availability – public search for free workspaces (FR02). No login needed: visitors can see
 // what is free before they register. The search is stored in the URL (see searchParams.ts).
+// CW-30: a member reserves straight from the results (UC04: search → Reserve → confirm → done,
+// NFR03); a visitor gets a login link that returns to the same search.
 import { Alert, Center, Loader, Stack, Text, Title } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +24,10 @@ import {
   type AvailabilitySearch,
 } from "../features/availability/searchParams";
 import { centerNow } from "../features/availability/workingHours";
+import { Roles } from "../features/auth/roles";
+import { useAuth } from "../features/auth/useAuth";
+import { ReserveModal } from "../features/reservations/ReserveModal";
+import type { ReservationSlot } from "../features/reservations/slot";
 
 /**
  * Module level, so useApiQuery gets a stable loader. No search in the URL yet → no request.
@@ -34,7 +40,10 @@ async function loadAvailability(
 
 export function AvailabilityPage() {
   const { t } = useTranslation();
+  const { status, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  // The slot the member clicked "Reserve" on; null = the dialog is closed.
+  const [reserving, setReserving] = useState<ReservationSlot | null>(null);
 
   // Read the clock once, when the page opens (a lazy initial state may do that; render may not).
   const [now] = useState(() => centerNow());
@@ -79,7 +88,35 @@ export function AvailabilityPage() {
         </Alert>
       );
     }
-    return data ? <AvailabilityResults data={data} search={search} /> : null;
+    if (!data) {
+      return null;
+    }
+    // Only members reserve (UC04). Employees just look; visitors are invited to log in and come
+    // back to exactly this search (GuestOnly sends them to ?from= after the login).
+    const isMember = status === "authenticated" && user?.role === Roles.Member;
+    const loginHref =
+      status === "anonymous"
+        ? `/login?from=${encodeURIComponent(`/availability?${paramsKey}`)}`
+        : undefined;
+    const currentSearch = search;
+    return (
+      <AvailabilityResults
+        data={data}
+        search={currentSearch}
+        loginHref={loginHref}
+        onReserve={
+          isMember
+            ? (workspace, room) =>
+                setReserving({
+                  workspace: { ...workspace, roomName: room.name },
+                  date: currentSearch.date,
+                  from: currentSearch.from,
+                  to: currentSearch.to,
+                })
+            : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -99,6 +136,12 @@ export function AvailabilityPage() {
       />
 
       {renderResults()}
+
+      {/* Mounted only while open, so every opening starts on the confirm step. After a successful
+          reservation the search reloads in the background: the workspace is no longer free. */}
+      {reserving && (
+        <ReserveModal slot={reserving} onClose={() => setReserving(null)} onReserved={reload} />
+      )}
     </Stack>
   );
 }
