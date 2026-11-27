@@ -70,3 +70,19 @@ function previousDay(isoDate: string): string {
   date.setUTCDate(date.getUTCDate() - 1);
   return date.toISOString().slice(0, 10);
 }
+
+/**
+ * When will a membership paid TODAY start? BR05: on the payment day, or – when the member still
+ * has a valid paid membership – on the day after its last day (renewal). Used for the preview in
+ * the payment dialog (CW-28); the backend calculates the real date.
+ * @param validThrough The member's last valid day (MemberResponse.validThrough), or null.
+ * @param today The Sarajevo date (centerNow().date).
+ */
+export function paymentStartDate(validThrough: string | null | undefined, today: string): string {
+  if (validThrough == null || validThrough < today) {
+    return today;
+  }
+  const next = new Date(`${validThrough}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  return next.toISOString().slice(0, 10);
+}

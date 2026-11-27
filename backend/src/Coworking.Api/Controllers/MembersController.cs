@@ -34,6 +34,15 @@ public sealed class MembersController(IMemberService members, IMembershipService
         CancellationToken cancellationToken
     ) => await members.ListAsync(query, cancellationToken);
 
+    /// <summary>Active fixed desks with the member who has each one – choices for the member form.</summary>
+    /// <param name="cancellationToken">Cancelled when the client disconnects.</param>
+    /// <response code="200">The desks, sorted by code (may be empty).</response>
+    [HttpGet("fixed-desks")]
+    [ProducesResponseType<IReadOnlyList<FixedDeskOption>>(StatusCodes.Status200OK, "application/json")]
+    public async Task<ActionResult<IReadOnlyList<FixedDeskOption>>> ListFixedDesks(
+        CancellationToken cancellationToken
+    ) => Ok(await members.ListFixedDesksAsync(cancellationToken));
+
     /// <summary>Returns one member with the fixed desk and the current membership.</summary>
     /// <param name="id">Member id.</param>
     /// <param name="cancellationToken">Cancelled when the client disconnects.</param>

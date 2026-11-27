@@ -82,6 +82,39 @@ public sealed class MemberService(
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<FixedDeskOption>> ListFixedDesksAsync(CancellationToken cancellationToken = default)
+    {
+        // Same "assignable" rule as ApplyFixedDeskAsync. The member is a correlated sub-select
+        // (Workspace has no navigation back to Member), so this is still ONE SQL query.
+        var desks = await db
+            .Workspaces.AsNoTracking()
+            .Where(w => w.Type == WorkspaceType.FixedDesk && w.IsActive && w.Room.IsActive)
+            .OrderBy(w => w.Code)
+            .Select(w => new
+            {
+                w.Id,
+                w.Code,
+                RoomName = w.Room.Name,
+                Member = db
+                    .Members.Where(m => m.FixedWorkspaceId == w.Id)
+                    .Select(m => new { m.Id, m.FirstName, m.LastName })
+                    .FirstOrDefault(),
+            })
+            .ToListAsync(cancellationToken);
+
+        return
+        [
+            .. desks.Select(d => new FixedDeskOption(
+                d.Id,
+                d.Code,
+                d.RoomName,
+                d.Member?.Id,
+                d.Member is null ? null : $"{d.Member.FirstName} {d.Member.LastName}"
+            )),
+        ];
+    }
+
+    /// <inheritdoc />
     public async Task<MemberResponse> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         var member =
