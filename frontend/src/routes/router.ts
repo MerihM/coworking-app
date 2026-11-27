@@ -18,6 +18,7 @@ import { NotFoundPage } from "../pages/NotFoundPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { StaffListPage } from "../pages/admin/StaffListPage";
 import { MembershipTypesPage } from "../pages/manage/MembershipTypesPage";
+import { MyMembershipPage } from "../pages/member/MyMembershipPage";
 import { RoomDetailPage } from "../pages/manage/RoomDetailPage";
 import { RoomsListPage } from "../pages/manage/RoomsListPage";
 
@@ -49,6 +50,13 @@ export const router = createBrowserRouter([
             Component: RequireRole,
             handle: { roles: [Roles.Administrator] } satisfies RouteHandle,
             children: [{ path: "admin/staff", Component: StaffListPage }], // CW-17
+          },
+
+          // Member only (FR03): my membership – buy, cancel an unpaid order, history (CW-27).
+          {
+            Component: RequireRole,
+            handle: { roles: [Roles.Member] } satisfies RouteHandle,
+            children: [{ path: "memberships", Component: MyMembershipPage }],
           },
 
           // Manager only (FR09, FR10). Roles don't inherit: the administrator gets /forbidden too.

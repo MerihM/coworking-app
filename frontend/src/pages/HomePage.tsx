@@ -2,6 +2,7 @@ import { Button, Card, Center, Group, Loader, SimpleGrid, Stack, Text, Title } f
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useApiQuery } from "../api/useApiQuery";
+import { Roles } from "../features/auth/roles";
 import { useAuth } from "../features/auth/useAuth";
 import { ApiStatus } from "../features/health/ApiStatus";
 import { getMembershipOffer } from "../features/membershipTypes/membershipTypesApi";
@@ -9,11 +10,14 @@ import { formatDuration, formatPrice } from "../lib/format";
 
 /**
  * Start page, public (CW-25): what the center offers, the membership price list (FR10) and the
- * way to the availability search (FR02). Visitors also get a "Create an account" button.
+ * way to the availability search (FR02). Visitors also get a "Create an account" button;
+ * members get a "Buy" button on each offer card that leads to "My membership" (CW-27).
  */
 export function HomePage() {
   const { t, i18n } = useTranslation();
-  const { status } = useAuth();
+  const { status, user } = useAuth();
+  // Members can buy straight from the offer (CW-27); the purchase itself is on /memberships.
+  const isMember = user?.role === Roles.Member;
 
   // getMembershipOffer takes no query – `undefined` is a stable "query" for useApiQuery.
   const offer = useApiQuery(getMembershipOffer, undefined);
@@ -43,6 +47,17 @@ export function HomePage() {
             <Text size="sm" c="dimmed">
               {formatDuration(item.durationDays, t)}
             </Text>
+            {isMember && (
+              <Button
+                component={Link}
+                to="/memberships"
+                variant="light"
+                mt="md"
+                aria-label={t("memberships.buy.buttonFor", { name: item.name })}
+              >
+                {t("home.buy")}
+              </Button>
+            )}
           </Card>
         ))}
       </SimpleGrid>

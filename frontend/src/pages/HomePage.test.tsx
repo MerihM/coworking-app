@@ -63,4 +63,21 @@ describe("HomePage", () => {
 
     expect(await screen.findByText("The offer could not be loaded.")).toBeInTheDocument();
   });
+
+  it("lets members go from an offer card to buying it", async () => {
+    renderPage(<HomePage />, fakeAuth({ status: "authenticated", user: testUser() }));
+
+    expect(await screen.findByRole("link", { name: "Buy Monthly" })).toHaveAttribute(
+      "href",
+      "/memberships",
+    );
+  });
+
+  it("shows no buy buttons to staff", async () => {
+    const manager = testUser({ id: 2, userType: "employee", role: "Manager" });
+    renderPage(<HomePage />, fakeAuth({ status: "authenticated", user: manager }));
+
+    await screen.findByText("Monthly");
+    expect(screen.queryByRole("link", { name: "Buy Monthly" })).not.toBeInTheDocument();
+  });
 });

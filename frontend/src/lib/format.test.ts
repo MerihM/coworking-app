@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import i18n from "../i18n";
-import { formatDuration, formatLongDate, formatPrice } from "./format";
+import { formatDate, formatDuration, formatLongDate, formatPrice } from "./format";
 
 /** Intl puts a no-break space between number and currency; compare with plain spaces. */
 const plain = (text: string) => text.replace(/\s/g, " ");
@@ -48,5 +48,17 @@ describe("formatLongDate", () => {
 
   it("writes the date in Bosnian", () => {
     expect(formatLongDate("2026-12-01", "bs")).toBe("utorak, 1. decembar");
+  });
+});
+
+describe("formatDate", () => {
+  it("writes a short English date", () => {
+    expect(formatDate("2026-12-26", "en")).toBe("26 Dec 2026");
+  });
+
+  it("keeps the same day in Bosnian (exact punctuation depends on the browser's Intl data)", () => {
+    const text = formatDate("2026-12-26", "bs");
+    expect(text).toContain("26");
+    expect(text).toContain("2026");
   });
 });

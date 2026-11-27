@@ -23,6 +23,7 @@ export const bs: typeof en = {
     staff: "Osoblje",
     spaces: "Prostori",
     membershipTypes: "Tipovi članarina",
+    myMembership: "Moja članarina",
     openMenu: "Otvori navigaciju",
     closeMenu: "Zatvori navigaciju",
   },
@@ -37,6 +38,7 @@ export const bs: typeof en = {
     offerIntro: "Članarine za svaki ritam – od jednog dana do cijelog mjeseca.",
     offerEmpty: "Trenutno nema članarina u ponudi.",
     offerFailed: "Ponuda se nije mogla učitati.",
+    buy: "Kupi",
   },
   health: {
     label: "API",
@@ -112,6 +114,13 @@ export const bs: typeof en = {
     outsideWorkingHours:
       "Ovaj termin je izvan radnog vremena (pon–pet 07:00–22:00, sub 09:00–17:00, nedjeljom zatvoreno) ili je kraći od 1 sata.",
     inPast: "Ovaj termin je već prošao. Odaberite termin u budućnosti.",
+    memberInactive: "Ovaj korisnički račun člana je deaktiviran.",
+    fixedDeskInvalid: "Članu se može dodijeliti samo aktivno fiksno mjesto.",
+    fixedDeskTaken: "Ovo fiksno mjesto je već dodijeljeno drugom članu.",
+    membershipTypeInactive: "Ovaj tip članarine se više ne nudi.",
+    unpaidExists: "Već postoji neplaćena članarina koja čeka uplatu. Prvo je platite ili otkažite.",
+    alreadyPaid: "Ova članarina je već plaćena.",
+    paymentAmount: "Iznos mora biti tačno jednak cijeni članarine.",
     network: "Server nije dostupan. Provjerite vezu i pokušajte ponovo.",
     server: "Došlo je do greške na serveru. Pokušajte ponovo kasnije.",
     unknown: "Nešto nije u redu. Pokušajte ponovo.",
@@ -438,6 +447,66 @@ export const bs: typeof en = {
       activated: "{{name}} je ponovo u ponudi.",
       deleted: "{{name}} je obrisan.",
       failed: "Akcija nije uspjela",
+    },
+  },
+  memberships: {
+    title: "Moja članarina",
+    loadFailed: "Vaše članarine nije moguće učitati.",
+    status: {
+      Unpaid: "Neplaćena",
+      Active: "Aktivna",
+      Expired: "Istekla",
+    },
+    current: {
+      activeTitle: "Vaša članarina je aktivna",
+      active: "{{type}} – važi do {{date}}.",
+      renewed: "Produženje je plaćeno: počinje {{start}}, pa ste pokriveni do {{date}}.",
+      upcomingTitle: "Vaša članarina uskoro počinje",
+      upcoming: "{{type}} – važi od {{start}} do {{date}}.",
+      noneTitle: "Nemate aktivnu članarinu",
+      none: "Za rezervaciju radnog mjesta potrebna je aktivna članarina. Odaberite jednu ispod i platite na recepciji.",
+    },
+    unpaid: {
+      title: "Čeka uplatu",
+      message: "{{type}}: platite {{price}} na recepciji. Članarina počinje danom uplate.",
+      cancel: "Otkaži narudžbu",
+    },
+    buy: {
+      title: "Kupi članarinu",
+      button: "Kupi",
+      buttonFor: "Kupi {{name}}",
+      blockedHint:
+        "Već imate narudžbu koja čeka uplatu. Platite je na recepciji ili je otkažite da biste odabrali drugu.",
+      renewalHint: "Nova članarina počinje dan nakon isteka trenutne.",
+    },
+    confirm: {
+      buy: {
+        title: "Kupiti {{name}}?",
+        message:
+          "{{duration}} za {{price}}. Plaćate na recepciji, a članarina postaje aktivna danom uplate.",
+        messageRenewal:
+          "{{duration}} za {{price}}. Plaćate na recepciji; nova članarina počinje kada trenutna istekne.",
+        confirm: "Kupi",
+      },
+      cancel: {
+        title: "Otkazati narudžbu?",
+        message: "Neplaćena članarina {{type}} bit će uklonjena.",
+        confirm: "Otkaži narudžbu",
+      },
+    },
+    notify: {
+      bought: "Naručeno. Platite {{price}} na recepciji da biste je aktivirali.",
+      cancelled: "Narudžba je otkazana.",
+      failed: "Nije uspjelo",
+    },
+    history: {
+      title: "Historija",
+      empty: "Još niste kupili nijednu članarinu.",
+      type: "Članarina",
+      price: "Cijena",
+      status: "Status",
+      period: "Važi",
+      paidOn: "Plaćeno",
     },
   },
   availability: {

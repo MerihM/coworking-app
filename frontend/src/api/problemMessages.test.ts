@@ -22,6 +22,15 @@ describe("problemMessage", () => {
     }
   });
 
+  it("translates the membership codes and the BR05 payment rule (CW-26)", () => {
+    expect(problemMessage({ status: 409, code: "memberships.unpaid_exists" }, t)).toBe(
+      "There is already an unpaid membership waiting for payment. Pay or cancel it first.",
+    );
+    expect(problemMessage({ status: 422, ruleCode: "BR05", detail: "developer text" }, t)).toBe(
+      "The amount must be exactly the membership price.",
+    );
+  });
+
   it.each([
     [{ status: 0 }, "The server can't be reached. Check your connection and try again."],
     [{ status: 429 }, "Too many attempts. Wait a minute and try again."],
