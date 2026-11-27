@@ -779,6 +779,674 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists members, one page at a time, sorted by last name. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Part of the first name, last name, full name, e-mail or phone (case-insensitive). */
+                    Search?: string;
+                    /** @description true = only active, false = only deactivated. */
+                    IsActive?: boolean;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfMemberResponse"];
+                    };
+                };
+                /** @description Invalid paging or filter values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Registers a member at the desk with an initial password. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateMemberRequest"];
+                    "text/json": components["schemas"]["CreateMemberRequest"];
+                    "application/*+json": components["schemas"]["CreateMemberRequest"];
+                };
+            };
+            responses: {
+                /** @description Created; Location points to the new member. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description The fixed desk doesn't exist. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description E-mail already used (auth.email_taken) or desk taken (members.fixed_desk_taken). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The desk is not an active fixed desk (members.fixed_desk_invalid). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one member with the fixed desk and the current membership. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Member id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The member. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberResponse"];
+                    };
+                };
+                /** @description No member with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        /** Changes personal data and the fixed desk (null removes it). */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Member id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateMemberRequest"];
+                    "text/json": components["schemas"]["UpdateMemberRequest"];
+                    "application/*+json": components["schemas"]["UpdateMemberRequest"];
+                };
+            };
+            responses: {
+                /** @description The updated member. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description No member (or fixed desk) with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description E-mail already used or desk taken. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The desk is not an active fixed desk. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a member without memberships and reservations (otherwise: deactivate). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Member id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No member with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The member has memberships or reservations (conflict.in_use). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivates the member: no login, no new memberships. Ends their sessions. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Member id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deactivated (or already inactive). */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No member with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activates a deactivated member again. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Member id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No member with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{id}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sells a membership at the desk; it is Unpaid until the payment is recorded (BR05). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Member id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["BuyMembershipRequest"];
+                    "text/json": components["schemas"]["BuyMembershipRequest"];
+                    "application/*+json": components["schemas"]["BuyMembershipRequest"];
+                };
+            };
+            responses: {
+                /** @description Created; Location points to the membership. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Unknown member or membership type. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The member already has an unpaid membership (memberships.unpaid_exists). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Member deactivated (members.inactive) or type no longer offered (memberships.type_inactive). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists memberships, one page at a time. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only this member's memberships. */
+                    MemberId?: number;
+                    /** @description Unpaid, Active (incl. paid renewals that start later) or Expired – as of today. */
+                    Status?: components["schemas"]["MembershipStatus"];
+                    /** @description Part of the member's name or e-mail (case-insensitive). */
+                    Search?: string;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The requested page (Unpaid: oldest first; otherwise newest first). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResultOfMembershipResponse"];
+                    };
+                };
+                /** @description Invalid paging or filter values. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memberships/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one membership with its payment. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The membership. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipResponse"];
+                    };
+                };
+                /** @description No membership with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Deletes an unpaid membership. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No membership with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The membership is paid (memberships.already_paid). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memberships/{id}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Records the payment and activates the membership (BR05): it starts today, or – for a
+         *     renewal – on the day the current membership ends.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RecordPaymentRequest"];
+                    "text/json": components["schemas"]["RecordPaymentRequest"];
+                    "application/*+json": components["schemas"]["RecordPaymentRequest"];
+                };
+            };
+            responses: {
+                /** @description The active membership with its period and payment. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description No membership with this id. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Already paid (memberships.already_paid). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Amount differs from the price (ruleCode BR05). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/membership-types/offer": {
         parameters: {
             query?: never;
@@ -1148,6 +1816,160 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memberships/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My memberships, newest purchase first. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The memberships (may be empty). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Buys a membership; it stays Unpaid until it is paid at the reception (UC03 steps 4–5). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Cancelled when the client disconnects. */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["BuyMembershipRequest"];
+                    "text/json": components["schemas"]["BuyMembershipRequest"];
+                    "application/*+json": components["schemas"]["BuyMembershipRequest"];
+                };
+            };
+            responses: {
+                /** @description The new, unpaid membership; its price is the amount to pay. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MembershipResponse"];
+                    };
+                };
+                /** @description Invalid input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Unknown membership type. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description An unpaid membership already exists (memberships.unpaid_exists). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description The type is no longer offered (memberships.type_inactive). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memberships/mine/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancels my unpaid membership. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Membership id. */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such membership of mine. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description It is already paid (memberships.already_paid). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1958,6 +2780,17 @@ export interface components {
              */
             capacity: number;
         };
+        /**
+         * @description Body of `POST /api/memberships/mine` (the member buys, UC03 step 3) and
+         *     `POST /api/members/{id}/memberships` (reception sells at the desk).
+         */
+        BuyMembershipRequest: {
+            /**
+             * Format: int32
+             * @description An active membership type from the offer.
+             */
+            membershipTypeId: number;
+        };
         /** @description Body of `POST /api/employees`: a new staff account (FR12, UC14). */
         CreateEmployeeRequest: {
             /** @description First name. */
@@ -1970,6 +2803,27 @@ export interface components {
             role: components["schemas"]["EmployeeRole"];
             /** @description Initial password (password policy applies). The administrator tells it to the employee. */
             password: string;
+        };
+        /**
+         * @description Body of `POST /api/members`: reception registers a member at the desk (FR08, UC10).
+         *     Same fields as self-registration (FR01) plus an optional fixed desk.
+         */
+        CreateMemberRequest: {
+            /** @description First name. */
+            firstName: string;
+            /** @description Last name. */
+            lastName: string;
+            /** @description Login e-mail; must not be used by any member or employee. */
+            email: string;
+            /** @description Phone number. */
+            phone: string;
+            /** @description Initial password (password policy applies); reception tells it to the member. */
+            password: string;
+            /**
+             * Format: int32
+             * @description Id of an active FixedDesk to assign, or null.
+             */
+            fixedWorkspaceId: null | number;
         };
         /** @description Body of `POST /api/membership-types`: a new, active type (FR10, UC12). */
         CreateMembershipTypeRequest: {
@@ -2015,6 +2869,31 @@ export interface components {
              */
             capacity: number;
         };
+        /** @description The membership a member can use today. */
+        CurrentMembershipInfo: {
+            /**
+             * Format: int32
+             * @description Membership id.
+             */
+            id: number;
+            /** @description Membership type name, e.g. "Monthly". */
+            typeName: string;
+            /**
+             * Format: date
+             * @description First valid day.
+             */
+            startDate: string;
+            /**
+             * Format: date
+             * @description First day NO LONGER valid (exclusive, ADR 0002).
+             */
+            endDate: string;
+            /**
+             * Format: date
+             * @description Last valid day (EndDate − 1) – what the UI shows as "valid until".
+             */
+            lastDay?: string;
+        };
         /** @description A staff account as shown in the administrator's list and edit form. Never contains the password hash. */
         EmployeeResponse: {
             /**
@@ -2038,6 +2917,16 @@ export interface components {
          * @enum {unknown}
          */
         EmployeeRole: "Receptionist" | "Manager" | "Administrator";
+        /** @description The fixed desk assigned to a member. */
+        FixedDeskInfo: {
+            /**
+             * Format: int32
+             * @description Workspace id.
+             */
+            id: number;
+            /** @description Workspace code, e.g. "OS-25". */
+            code: string;
+        };
         HttpValidationProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -2056,6 +2945,104 @@ export interface components {
             /** @description Plain-text password. */
             password: string;
         };
+        /**
+         * @description A member as reception sees it in the list and on the detail page (FR08). Never contains the
+         *     password hash.
+         */
+        MemberResponse: {
+            /**
+             * Format: int32
+             * @description Member id.
+             */
+            id: number;
+            /** @description First name. */
+            firstName: string;
+            /** @description Last name. */
+            lastName: string;
+            /** @description Login e-mail (lower case). */
+            email: string;
+            /** @description Phone number. */
+            phone: string;
+            /** @description Deactivated members can't log in or get new memberships. */
+            isActive: boolean;
+            /**
+             * Format: date-time
+             * @description Registration moment (UTC).
+             */
+            registeredAt: string;
+            fixedDesk: null | components["schemas"]["FixedDeskInfo"];
+            currentMembership: null | components["schemas"]["CurrentMembershipInfo"];
+            /**
+             * Format: date
+             * @description Last valid day counting paid renewals that start later (BR05), or null. E.g. a monthly
+             *     membership plus a paid renewal → the renewal's last day.
+             */
+            validThrough: null | string;
+            /** @description An unpaid membership is waiting for payment at the desk. */
+            hasUnpaidMembership: boolean;
+        };
+        /** @description A purchased membership with its payment (FR03, FR07; member's history and reception lists). */
+        MembershipResponse: {
+            /**
+             * Format: int32
+             * @description Membership id.
+             */
+            id: number;
+            /**
+             * Format: int32
+             * @description Member id.
+             */
+            memberId: number;
+            /** @description "First Last". */
+            memberName: string;
+            /** @description Member's e-mail. */
+            memberEmail: string;
+            /**
+             * Format: int32
+             * @description Type it was bought from.
+             */
+            membershipTypeId: number;
+            /** @description Type name, e.g. "Monthly". */
+            typeName: string;
+            /**
+             * Format: int32
+             * @description Duration copied at purchase.
+             */
+            durationDays: number;
+            /**
+             * Format: double
+             * @description Price copied at purchase (KM) – the amount to pay at the desk.
+             */
+            price: number;
+            /** @description Unpaid, Active or Expired as of today (derived, see Membership.EffectiveStatusOn). */
+            status: components["schemas"]["MembershipStatus"];
+            /**
+             * Format: date-time
+             * @description Purchase moment (UTC).
+             */
+            purchasedAt: string;
+            /**
+             * Format: date
+             * @description First valid day; null until paid (BR05).
+             */
+            startDate: null | string;
+            /**
+             * Format: date
+             * @description First day NO LONGER valid (exclusive); null until paid.
+             */
+            endDate: null | string;
+            payment: null | components["schemas"]["PaymentInfo"];
+            /**
+             * Format: date
+             * @description Last valid day (EndDate − 1), what the UI shows; null until paid.
+             */
+            lastDay?: null | string;
+        };
+        /**
+         * @description Status of a purchased membership (design document: StatusClanarine).
+         * @enum {unknown}
+         */
+        MembershipStatus: "Unpaid" | "Active" | "Expired";
         /**
          * @description One entry of the public price list (`GET /api/membership-types/offer`, UC03 step 2):
          *     only what a visitor needs to see, no status or usage numbers.
@@ -2111,6 +3098,56 @@ export interface components {
         PagedResultOfEmployeeResponse: {
             /** @description The items on this page (may be empty). */
             items: components["schemas"]["EmployeeResponse"][];
+            /**
+             * Format: int32
+             * @description This page's number (1-based).
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description Requested items per page.
+             */
+            pageSize: number;
+            /**
+             * Format: int32
+             * @description Number of items on ALL pages that match the filters.
+             */
+            totalCount: number;
+            /**
+             * Format: int32
+             * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
+             */
+            totalPages?: number;
+        };
+        /** @description One page of a list plus what the frontend needs to draw the pager. */
+        PagedResultOfMemberResponse: {
+            /** @description The items on this page (may be empty). */
+            items: components["schemas"]["MemberResponse"][];
+            /**
+             * Format: int32
+             * @description This page's number (1-based).
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description Requested items per page.
+             */
+            pageSize: number;
+            /**
+             * Format: int32
+             * @description Number of items on ALL pages that match the filters.
+             */
+            totalCount: number;
+            /**
+             * Format: int32
+             * @description Number of pages (0 when nothing matches). Rounds up: 41 items / 20 = 3 pages.
+             */
+            totalPages?: number;
+        };
+        /** @description One page of a list plus what the frontend needs to draw the pager. */
+        PagedResultOfMembershipResponse: {
+            /** @description The items on this page (may be empty). */
+            items: components["schemas"]["MembershipResponse"][];
             /**
              * Format: int32
              * @description This page's number (1-based).
@@ -2207,6 +3244,28 @@ export interface components {
              */
             totalPages?: number;
         };
+        /** @description A recorded payment (Uplata). */
+        PaymentInfo: {
+            /**
+             * Format: date-time
+             * @description Moment of payment (UTC).
+             */
+            paidAt: string;
+            /**
+             * Format: double
+             * @description Amount in KM.
+             */
+            amount: number;
+            /** @description Cash or Card. */
+            method: components["schemas"]["PaymentMethod"];
+            /** @description Employee who recorded it ("First Last"). */
+            recordedByName: string;
+        };
+        /**
+         * @description How a payment was made at the reception (design document: NacinPlacanja).
+         * @enum {unknown}
+         */
+        PaymentMethod: "Cash" | "Card";
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -2214,6 +3273,16 @@ export interface components {
             status?: null | number;
             detail?: null | string;
             instance?: null | string;
+        };
+        /** @description Body of `POST /api/memberships/{id}/payment` (FR07, UC09). */
+        RecordPaymentRequest: {
+            /**
+             * Format: double
+             * @description Amount received in KM; must equal the membership price (BR05).
+             */
+            amount: number;
+            /** @description Cash or Card. */
+            method: components["schemas"]["PaymentMethod"];
         };
         /** @description Body of `POST /api/auth/register` (FR01: name, surname, e-mail, phone and password). */
         RegisterMemberRequest: {
@@ -2275,6 +3344,22 @@ export interface components {
             email: string;
             /** @description New role (an administrator can't change their own). */
             role: components["schemas"]["EmployeeRole"];
+        };
+        /** @description Body of `PUT /api/members/{id}`. PUT = the whole editable state; the password is not here. */
+        UpdateMemberRequest: {
+            /** @description First name. */
+            firstName: string;
+            /** @description Last name. */
+            lastName: string;
+            /** @description Login e-mail. */
+            email: string;
+            /** @description Phone number. */
+            phone: string;
+            /**
+             * Format: int32
+             * @description Fixed desk to assign; null removes the assignment.
+             */
+            fixedWorkspaceId: null | number;
         };
         /**
          * @description Body of `PUT /api/membership-types/{id}`: the whole editable state. A new price or duration

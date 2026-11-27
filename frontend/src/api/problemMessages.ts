@@ -24,6 +24,12 @@ const codeMessageKeys = {
   "workspaces.room_inactive": "errors.roomInactive",
   "membership_types.name_taken": "errors.membershipTypeNameTaken",
   "availability.in_past": "errors.inPast",
+  "members.inactive": "errors.memberInactive",
+  "members.fixed_desk_invalid": "errors.fixedDeskInvalid",
+  "members.fixed_desk_taken": "errors.fixedDeskTaken",
+  "memberships.type_inactive": "errors.membershipTypeInactive",
+  "memberships.unpaid_exists": "errors.unpaidExists",
+  "memberships.already_paid": "errors.alreadyPaid",
 } as const;
 
 /**
@@ -33,6 +39,8 @@ const codeMessageKeys = {
  */
 const ruleMessageKeys = {
   BR04: "errors.outsideWorkingHours",
+  // CW-26: a payment whose amount differs from the membership price.
+  BR05: "errors.paymentAmount",
 } as const;
 
 type KnownCode = keyof typeof codeMessageKeys;

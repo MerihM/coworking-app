@@ -25,6 +25,7 @@ export const en = {
     staff: "Staff",
     spaces: "Spaces",
     membershipTypes: "Membership types",
+    myMembership: "My membership",
     openMenu: "Open navigation",
     closeMenu: "Close navigation",
   },
@@ -39,6 +40,7 @@ export const en = {
     offerIntro: "Memberships for every rhythm – from a single day to a whole month.",
     offerEmpty: "No memberships are on offer at the moment.",
     offerFailed: "The offer could not be loaded.",
+    buy: "Buy",
   },
   health: {
     label: "API",
@@ -113,6 +115,14 @@ export const en = {
     outsideWorkingHours:
       "This time is outside our working hours (Mon–Fri 07:00–22:00, Sat 09:00–17:00, closed on Sunday) or shorter than 1 hour.",
     inPast: "This time has already passed. Choose a time in the future.",
+    memberInactive: "This member account is deactivated.",
+    fixedDeskInvalid: "Only an active fixed desk can be assigned to a member.",
+    fixedDeskTaken: "This fixed desk is already assigned to another member.",
+    membershipTypeInactive: "This membership type is no longer offered.",
+    unpaidExists:
+      "There is already an unpaid membership waiting for payment. Pay or cancel it first.",
+    alreadyPaid: "This membership has already been paid.",
+    paymentAmount: "The amount must be exactly the membership price.",
     network: "The server can't be reached. Check your connection and try again.",
     server: "Something went wrong on the server. Please try again later.",
     unknown: "Something went wrong. Please try again.",
@@ -439,6 +449,67 @@ export const en = {
       activated: "{{name}} is offered again.",
       deleted: "{{name}} was deleted.",
       failed: "The action failed",
+    },
+  },
+  memberships: {
+    title: "My membership",
+    loadFailed: "Your memberships could not be loaded.",
+    status: {
+      Unpaid: "Unpaid",
+      Active: "Active",
+      Expired: "Expired",
+    },
+    current: {
+      activeTitle: "Your membership is active",
+      active: "{{type}} – valid until {{date}}.",
+      renewed: "Renewal paid: it starts on {{start}}, so you are covered until {{date}}.",
+      upcomingTitle: "Your membership starts soon",
+      upcoming: "{{type}} – valid from {{start}} until {{date}}.",
+      noneTitle: "No active membership",
+      none: "You need an active membership to reserve a workspace. Choose one below and pay at the reception.",
+    },
+    unpaid: {
+      title: "Waiting for payment",
+      message:
+        "{{type}}: pay {{price}} at the reception. The membership starts on the day you pay.",
+      cancel: "Cancel this order",
+    },
+    buy: {
+      title: "Buy a membership",
+      button: "Buy",
+      buttonFor: "Buy {{name}}",
+      blockedHint:
+        "You already have an order waiting for payment. Pay it at the reception or cancel it to choose another one.",
+      renewalHint: "A new membership starts on the day after your current one ends.",
+    },
+    confirm: {
+      buy: {
+        title: "Buy {{name}}?",
+        message:
+          "{{duration}} for {{price}}. You pay at the reception, and the membership becomes active on the day you pay.",
+        messageRenewal:
+          "{{duration}} for {{price}}. You pay at the reception; the new membership starts when your current one ends.",
+        confirm: "Buy",
+      },
+      cancel: {
+        title: "Cancel the order?",
+        message: "The unpaid {{type}} membership will be removed.",
+        confirm: "Cancel order",
+      },
+    },
+    notify: {
+      bought: "Ordered. Pay {{price}} at the reception to activate it.",
+      cancelled: "The order was cancelled.",
+      failed: "That didn't work",
+    },
+    history: {
+      title: "History",
+      empty: "You haven't bought any memberships yet.",
+      type: "Membership",
+      price: "Price",
+      status: "Status",
+      period: "Valid",
+      paidOn: "Paid on",
     },
   },
   availability: {

@@ -56,3 +56,16 @@ export function formatLongDate(isoDate: string, language: string | undefined): s
     timeZone: "UTC",
   }).format(new Date(`${isoDate}T00:00:00Z`));
 }
+
+/**
+ * A calendar date, short, in the UI language: formatDate("2026-12-26", "en") → "26 Dec 2026",
+ * formatDate("2026-12-26", "bs") → "26. dec 2026." (Used for membership periods, CW-27.)
+ * @param isoDate A local date as "YYYY-MM-DD".
+ * @param language The current UI language, e.g. i18n.resolvedLanguage.
+ */
+export function formatDate(isoDate: string, language: string | undefined): string {
+  return new Intl.DateTimeFormat(language?.startsWith("bs") ? "bs-BA" : "en-GB", {
+    dateStyle: "medium",
+    timeZone: "UTC", // same trick as formatLongDate: the visitor's time zone can't move the day
+  }).format(new Date(`${isoDate}T00:00:00Z`));
+}

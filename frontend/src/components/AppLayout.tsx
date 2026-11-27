@@ -15,7 +15,8 @@ type NavItem = {
     | "nav.account"
     | "nav.staff"
     | "nav.spaces"
-    | "nav.membershipTypes";
+    | "nav.membershipTypes"
+    | "nav.myMembership";
   /** Show only to logged-in users. */
   requiresAuth?: boolean;
   /** Show only to these roles (implies requiresAuth). */
@@ -29,6 +30,7 @@ type NavItem = {
 const navItems: readonly NavItem[] = [
   { to: "/", labelKey: "nav.home" },
   { to: "/availability", labelKey: "nav.availability" }, // CW-25, public
+  { to: "/memberships", labelKey: "nav.myMembership", roles: [Roles.Member] }, // CW-27
   { to: "/account", labelKey: "nav.account", requiresAuth: true },
   { to: "/admin/staff", labelKey: "nav.staff", roles: [Roles.Administrator] },
   { to: "/manage/rooms", labelKey: "nav.spaces", roles: [Roles.Manager] }, // CW-23
