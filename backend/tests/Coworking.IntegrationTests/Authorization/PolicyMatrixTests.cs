@@ -56,40 +56,8 @@ public sealed class PolicyMatrixTests(AuthTestingApiFactory factory) : IClassFix
         Assert.Equal(expected, response.StatusCode);
     }
 
-    [Fact]
-    public async Task TC08_MemberOpensReport_Returns403()
-    {
-        // TC08 (design document, table of test cases): a logged-in Member tries to open the
-        // occupancy and revenue report → access is denied, only the Manager may generate it.
-        using var client = ClientFor(Roles.Member);
-
-        var response = await client.GetAsync("/test/policies/reports");
-
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task TC08_ManagerOpensReport_Returns200()
-    {
-        using var client = ClientFor(Roles.Manager);
-
-        var response = await client.GetAsync("/test/policies/reports");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Theory]
-    [InlineData(nameof(Roles.Receptionist))]
-    [InlineData(nameof(Roles.Administrator))]
-    public async Task TC08_OtherStaffOpenReport_Returns403(string role)
-    {
-        // Roles don't inherit: an Administrator manages accounts, but is not a Manager.
-        using var client = ClientFor(role);
-
-        var response = await client.GetAsync("/test/policies/reports");
-
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
+    // TC08 (Member opens the FR11 report → 403) moved to Reports/ReportsEndpointsTests in CW-32,
+    // where it runs against the real report endpoint instead of a test stand-in.
 
     private HttpClient ClientFor(string caller)
     {

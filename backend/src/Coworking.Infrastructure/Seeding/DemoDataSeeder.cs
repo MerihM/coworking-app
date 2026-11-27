@@ -26,6 +26,15 @@ public sealed record DemoDataSeedResult(int Rooms, int Workspaces, int Membershi
     /// <summary>Upcoming demo reservations inserted (0–2, CW-29).</summary>
     public int Reservations { get; init; }
 
+    /// <summary>History members inserted (0 or all of <see cref="DemoData.HistoryMembers"/>, CW-32).</summary>
+    public int HistoryMembers { get; init; }
+
+    /// <summary>Past payments of the history members (CW-32).</summary>
+    public int HistoryPayments { get; init; }
+
+    /// <summary>Past reservations of the history members, cancelled ones included (CW-32).</summary>
+    public int HistoryReservations { get; init; }
+
     /// <summary>Nothing was inserted.</summary>
     public static DemoDataSeedResult Nothing { get; } = new(0, 0, 0, 0);
 }
@@ -107,11 +116,15 @@ public static class DemoDataSeeder
             var accounts = await SeedAccountsAsync(db, passwordHasher, time, options, logger, cancellationToken);
             var memberships = await SeedDemoMembershipAsync(db, time, logger, cancellationToken);
             var reservations = await SeedDemoReservationsAsync(db, time, logger, cancellationToken);
+            var history = await SeedHistoryAsync(db, passwordHasher, time, options, logger, cancellationToken);
 
             return new DemoDataSeedResult(rooms, workspaces, types, accounts)
             {
                 Memberships = memberships,
                 Reservations = reservations,
+                HistoryMembers = history.Members,
+                HistoryPayments = history.Payments,
+                HistoryReservations = history.Reservations,
             };
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -365,5 +378,153 @@ public static class DemoDataSeeder
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Seeded {Count} demo reservations for {Day}", created, day);
         return created;
+    }
+    /// <summary>
+    /// Four weeks of past activity for the FR11 report (CW-32): the members of
+    /// <see cref="DemoData.HistoryMembers"/>, their paid memberships and their past reservations,
+    /// following <see cref="DemoHistory.Plan"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Everything still goes through the domain – PurchaseMembership, Employee.RecordPayment (BR05),
+    /// Reservation.Create (BR04, BR02) and CancelByMember (BR03) – only with a "now" in the past:
+    /// on the visit day the member pays at 07:00, reserves at 07:05 and (in every second week)
+    /// cancels at 07:10. So the history obeys the same rules as live data, and Completed is derived
+    /// from the end time as usual.
+    /// </para>
+    /// <para>
+    /// Runs only when none of the history e-mails exists yet (a restart adds nothing) and only with
+    /// a demo password, like the other demo accounts. A visit whose workspace is missing, inactive
+    /// or already taken (BR01, e.g. by the developer's own test data) is skipped, not forced.
+    /// </para>
+    /// </remarks>
+    private static async Task<(int Members, int Payments, int Reservations)> SeedHistoryAsync(
+        CoworkingDbContext db,
+        IPasswordHasher passwordHasher,
+        TimeProvider time,
+        DemoDataOptions options,
+        ILogger logger,
+        CancellationToken cancellationToken
+    )
+    {
+        if (options.DemoPassword is not { Length: >= PasswordRules.MinLength })
+        {
+            return (0, 0, 0); // the warning was already logged by SeedAccountsAsync
+        }
+
+        foreach (var seed in DemoData.HistoryMembers)
+        {
+            if (await db.IsEmailTakenAsync(EmailAddresses.Normalize(seed.Email), cancellationToken: cancellationToken))
+            {
+                logger.LogInformation("History member {Email} already exists; skipping the demo history", seed.Email);
+                return (0, 0, 0);
+            }
+        }
+
+        var receptionistEmail = DemoData.Accounts.Single(a => a.Role == EmployeeRole.Receptionist).Email;
+        var receptionist = await db.Employees.SingleOrDefaultAsync(
+            e => e.Email == receptionistEmail && e.IsActive,
+            cancellationToken
+        );
+        if (receptionist is null)
+        {
+            logger.LogInformation("The demo receptionist is missing; skipping the demo history");
+            return (0, 0, 0);
+        }
+
+        // Only active types can be bought (Member.PurchaseMembership), so only those are planned.
+        var types = await db.MembershipTypes.Where(t => t.IsActive).ToListAsync(cancellationToken);
+        var typesByName = types.GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.First());
+
+        var codes = DemoData.HistoryMembers.SelectMany(m => m.Visits).Select(v => v.WorkspaceCode).Distinct().ToList();
+        var workspacesByCode = await db
+            .Workspaces.Include(w => w.Room)
+            .Where(w => codes.Contains(w.Code))
+            .ToDictionaryAsync(w => w.Code, cancellationToken);
+
+        var today = CenterTimeZone.ToLocalDate(time.GetUtcNow());
+        var plan = DemoHistory.Plan(today, typesByName.ToDictionary(p => p.Key, p => p.Value.DurationDays));
+        var registeredAt = CenterTimeZone.FromLocal(today.AddDays(-DemoData.HistoryDays - 1), new TimeOnly(12, 0));
+
+        // The members (a separate hash per account, like SeedAccountsAsync).
+        var members = new Dictionary<string, Member>();
+        foreach (var seed in DemoData.HistoryMembers)
+        {
+            var member = new Member(
+                seed.FirstName,
+                seed.LastName,
+                EmailAddresses.Normalize(seed.Email),
+                seed.Phone,
+                passwordHasher.Hash(options.DemoPassword),
+                registeredAt
+            );
+            db.Members.Add(member);
+            members[seed.Email] = member;
+        }
+
+        // Paid memberships: bought at 06:55, paid at 07:00 on the day (BR05 → starts that day).
+        var payments = 0;
+        foreach (var purchase in plan.Purchases)
+        {
+            var paidAt = CenterTimeZone.FromLocal(purchase.Day, new TimeOnly(7, 0));
+            var membership = members[purchase.Email]
+                .PurchaseMembership(typesByName[purchase.MembershipTypeName], paidAt.AddMinutes(-5));
+            receptionist.RecordPayment(membership, membership.Price, purchase.Method, paidAt);
+            payments++;
+        }
+
+        // Reservations: made at 07:05 on the day; every second week some are cancelled at 07:10.
+        var reservations = 0;
+        foreach (var visit in plan.Visits)
+        {
+            var member = members[visit.Email];
+            if (
+                !workspacesByCode.TryGetValue(visit.WorkspaceCode, out var workspace)
+                || workspace is not { IsActive: true, Room.IsActive: true }
+                || !member.HasActiveMembershipOn(visit.Day)
+            )
+            {
+                continue;
+            }
+
+            var startsAt = CenterTimeZone.FromLocal(visit.Day, visit.From);
+            var endsAt = CenterTimeZone.FromLocal(visit.Day, visit.To);
+            if (!visit.Cancelled)
+            {
+                // Rows saved earlier only; the plan itself never overlaps on one workspace.
+                var isFree = await db
+                    .Workspaces.Where(w => w.Id == workspace.Id)
+                    .FreeBetween(db.Reservations, startsAt, endsAt)
+                    .AnyAsync(cancellationToken);
+                if (!isFree)
+                {
+                    continue;
+                }
+            }
+
+            var reservation = Reservation.Create(
+                member,
+                workspace,
+                startsAt,
+                endsAt,
+                CenterTimeZone.FromLocal(visit.Day, new TimeOnly(7, 5))
+            );
+            if (visit.Cancelled)
+            {
+                reservation.CancelByMember(CenterTimeZone.FromLocal(visit.Day, new TimeOnly(7, 10)));
+            }
+
+            db.Reservations.Add(reservation);
+            reservations++;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        logger.LogInformation(
+            "Seeded demo history: {Members} members, {Payments} payments, {Reservations} past reservations",
+            members.Count,
+            payments,
+            reservations
+        );
+        return (members.Count, payments, reservations);
     }
 }

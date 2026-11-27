@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Coworking.Application.Auth;
 using Coworking.Application.Auth.Dtos;
 using Coworking.Application.Availability.Dtos;
+using Coworking.Domain.Common;
 using Coworking.Domain.Entities;
 using Coworking.Domain.Enums;
 using Coworking.Infrastructure.Persistence;
@@ -60,9 +61,18 @@ public class DemoDataSeederTests(PostgresApiFactory factory) : IClassFixture<Pos
 
         Assert.Equal(new DemoDataSeedResult(6, 35, 4, 0), first);
         // The demo member is created in this run, so it also gets its paid demo membership (CW-26)
-        // and its two upcoming reservations (CW-29).
+        // and its two upcoming reservations (CW-29). The history members (CW-32) need the password
+        // too, so they also come now – exactly as many payments and visits as the plan says.
+        var plan = DemoHistory.Plan(Today(), DemoTypeDurations());
         Assert.Equal(
-            new DemoDataSeedResult(0, 0, 0, 2) { Memberships = 1, Reservations = 2 },
+            new DemoDataSeedResult(0, 0, 0, 2)
+            {
+                Memberships = 1,
+                Reservations = 2,
+                HistoryMembers = DemoData.HistoryMembers.Count,
+                HistoryPayments = plan.Purchases.Count,
+                HistoryReservations = plan.Visits.Count,
+            },
             second
         ); // receptionist already existed
         Assert.Equal(DemoDataSeedResult.Nothing, third);
@@ -104,7 +114,87 @@ public class DemoDataSeederTests(PostgresApiFactory factory) : IClassFixture<Pos
         );
         Assert.Equal(29, search!.TotalFree);
         Assert.Equal("Open Space", search.Rooms[0].Name); // floor 1 comes first
+
+        // The history is really in the past and went through the rules: no reservation of a
+        // history member starts today or later, and the cancelled ones are stored as Cancelled.
+        var historyEmails = DemoData.HistoryMembers.Select(m => m.Email).ToList();
+        var startOfToday = CenterTimeZone.FromLocal(Today(), TimeOnly.MinValue);
+        Assert.False(
+            await db.Reservations.AnyAsync(r => historyEmails.Contains(r.Member.Email) && r.StartsAt >= startOfToday)
+        );
+        Assert.Equal(
+            plan.Visits.Count(v => v.Cancelled),
+            await db.Reservations.CountAsync(r =>
+                historyEmails.Contains(r.Member.Email) && r.Status == ReservationStatus.Cancelled
+            )
+        );
     }
+
+    [Fact]
+    public void DemoHistory_Plan_FollowsTheBusinessRules()
+    {
+        // A fixed Friday, so the test doesn't depend on the day it runs.
+        var today = new DateOnly(2026, 11, 27);
+        var plan = DemoHistory.Plan(today, DemoTypeDurations());
+        var durations = DemoTypeDurations();
+
+        Assert.NotEmpty(plan.Visits);
+        Assert.All(
+            plan.Visits,
+            visit =>
+            {
+                // In the past window, never on a Sunday (BR04), and inside the opening hours.
+                Assert.InRange(visit.Day, today.AddDays(-DemoData.HistoryDays), today.AddDays(-1));
+                Assert.True(
+                    WorkingHours.GetHours(visit.Day.DayOfWeek) is { } hours
+                        && visit.From >= hours.Open
+                        && visit.To <= hours.Close
+                );
+
+                // BR02: some purchase of the same member covers the visit day.
+                Assert.Contains(
+                    plan.Purchases,
+                    p =>
+                        p.Email == visit.Email
+                        && p.Day <= visit.Day
+                        && visit.Day < p.Day.AddDays(durations[p.MembershipTypeName])
+                );
+
+                // BR03: a cancelled visit starts late enough to be cancelled at 07:10.
+                Assert.True(!visit.Cancelled || visit.From >= new TimeOnly(9, 10));
+            }
+        );
+
+        // BR01: no two kept visits overlap on the same workspace.
+        var kept = plan.Visits.Where(v => !v.Cancelled).ToList();
+        foreach (var visit in kept)
+        {
+            Assert.DoesNotContain(
+                kept,
+                other =>
+                    !ReferenceEquals(other, visit)
+                    && other.WorkspaceCode == visit.WorkspaceCode
+                    && other.Day == visit.Day
+                    && other.From < visit.To
+                    && visit.From < other.To
+            );
+        }
+
+        // A Daily member pays on every visit day, a Monthly member once in 4 weeks.
+        var monthlyEmail = DemoData.HistoryMembers.First(m => m.MembershipTypeName == "Monthly").Email;
+        Assert.Single(plan.Purchases, p => p.Email == monthlyEmail);
+        var dailyEmail = DemoData.HistoryMembers.First(m => m.MembershipTypeName == "Daily").Email;
+        Assert.Equal(
+            plan.Visits.Where(v => v.Email == dailyEmail).Select(v => v.Day).Distinct().Count(),
+            plan.Purchases.Count(p => p.Email == dailyEmail)
+        );
+    }
+
+    private static DateOnly Today() => CenterTimeZone.ToLocalDate(DateTimeOffset.UtcNow);
+
+    /// <summary>Durations of the ACTIVE demo membership types – the ones the seeder can sell.</summary>
+    private static Dictionary<string, int> DemoTypeDurations() =>
+        DemoData.MembershipTypes.Where(t => t.IsActive).ToDictionary(t => t.Name, t => t.DurationDays);
 
     [Fact]
     public async Task SeedDemoData_SwitchedOff_DoesNothing()

@@ -99,4 +99,133 @@ public static class DemoData
 
     /// <summary>Phone number of the demo member (required field).</summary>
     public const string MemberPhone = "+387 61 123 456";
+
+    // ------------------------------------------------------------------ history (CW-32, FR11 report)
+
+    /// <summary>How many days of past activity the history members get (4 weeks before today).</summary>
+    public const int HistoryDays = 28;
+
+    /// <summary>A weekly habit of a history member: every <paramref name="Day"/> they use one workspace.</summary>
+    /// <param name="Day">Day of the week.</param>
+    /// <param name="WorkspaceCode">Workspace from <see cref="Rooms"/>.</param>
+    /// <param name="From">Local start time.</param>
+    /// <param name="To">Local end time.</param>
+    /// <param name="CancelledEveryOtherWeek">
+    /// In every second week the member cancels this visit in the morning (shows "cancelled" in the
+    /// report). Such visits start at 10:00 or later, so the cancellation keeps BR03 (2 h before).
+    /// </param>
+    public sealed record HistoryVisitSeed(
+        DayOfWeek Day,
+        string WorkspaceCode,
+        TimeOnly From,
+        TimeOnly To,
+        bool CancelledEveryOtherWeek = false
+    );
+
+    /// <summary>
+    /// A member with 4 weeks of past activity: they buy <paramref name="MembershipTypeName"/> whenever
+    /// they need one (BR02), pay it at the desk (BR05) and come by according to <paramref name="Visits"/>.
+    /// </summary>
+    /// <param name="Email">Login e-mail (demo password, like the other demo accounts).</param>
+    /// <param name="FirstName">First name.</param>
+    /// <param name="LastName">Last name.</param>
+    /// <param name="Phone">Phone.</param>
+    /// <param name="MembershipTypeName">Membership type from <see cref="MembershipTypes"/>.</param>
+    /// <param name="Method">How they pay.</param>
+    /// <param name="Visits">Their weekly habits.</param>
+    public sealed record HistoryMemberSeed(
+        string Email,
+        string FirstName,
+        string LastName,
+        string Phone,
+        string MembershipTypeName,
+        PaymentMethod Method,
+        IReadOnlyList<HistoryVisitSeed> Visits
+    );
+
+    /// <summary>
+    /// Five regulars, so the FR11 report has realistic past occupancy and revenue (the domain itself
+    /// refuses reservations in the past, so real use can't create history in a fresh database).
+    /// Each member uses their own workspaces at their own times – the plan never breaks BR01.
+    /// </summary>
+    public static IReadOnlyList<HistoryMemberSeed> HistoryMembers { get; } =
+    [
+        new(
+            "tarik.mehic@coworking.ba",
+            "Tarik",
+            "Mehić",
+            "+387 61 200 001",
+            "Monthly",
+            PaymentMethod.Card,
+            [
+                new(DayOfWeek.Monday, "OS-02", new(9, 0), new(17, 0)),
+                new(DayOfWeek.Tuesday, "OS-02", new(9, 0), new(17, 0)),
+                new(DayOfWeek.Wednesday, "OS-02", new(9, 0), new(17, 0)),
+                new(DayOfWeek.Wednesday, "MR-A", new(17, 0), new(19, 0)),
+                new(DayOfWeek.Thursday, "OS-02", new(9, 0), new(17, 0)),
+                new(DayOfWeek.Friday, "OS-02", new(9, 0), new(13, 0)),
+            ]
+        ),
+        new(
+            "sara.kovacevic@coworking.ba",
+            "Sara",
+            "Kovačević",
+            "+387 61 200 002",
+            "Weekly",
+            PaymentMethod.Cash,
+            [
+                new(DayOfWeek.Monday, "OS-05", new(10, 0), new(16, 0), CancelledEveryOtherWeek: true),
+                new(DayOfWeek.Tuesday, "OS-05", new(8, 0), new(16, 0)),
+                new(DayOfWeek.Wednesday, "OF-1", new(9, 0), new(17, 0)),
+                new(DayOfWeek.Thursday, "OS-05", new(8, 0), new(16, 0)),
+                new(DayOfWeek.Saturday, "OS-05", new(10, 0), new(14, 0)),
+            ]
+        ),
+        new(
+            "haris.delic@coworking.ba",
+            "Haris",
+            "Delić",
+            "+387 61 200 003",
+            "Daily",
+            PaymentMethod.Cash,
+            [
+                new(DayOfWeek.Tuesday, "OF-2", new(9, 0), new(17, 0)),
+                new(DayOfWeek.Thursday, "MR-B", new(10, 0), new(12, 0)),
+                new(DayOfWeek.Thursday, "OS-10", new(12, 0), new(18, 0)),
+                new(DayOfWeek.Saturday, "OS-10", new(9, 0), new(13, 0)),
+            ]
+        ),
+        new(
+            "dino.hasanovic@coworking.ba",
+            "Dino",
+            "Hasanović",
+            "+387 61 200 004",
+            "Monthly",
+            PaymentMethod.Card,
+            [
+                new(DayOfWeek.Monday, "OS-03", new(8, 0), new(16, 0)),
+                new(DayOfWeek.Monday, "MR-B", new(15, 0), new(17, 0)),
+                new(DayOfWeek.Tuesday, "OF-3", new(9, 0), new(18, 0)),
+                new(DayOfWeek.Wednesday, "OS-03", new(8, 0), new(16, 0)),
+                new(DayOfWeek.Thursday, "OF-3", new(9, 0), new(18, 0)),
+                new(DayOfWeek.Friday, "OS-03", new(8, 0), new(16, 0)),
+            ]
+        ),
+        new(
+            "ajla.mujic@coworking.ba",
+            "Ajla",
+            "Mujić",
+            "+387 61 200 005",
+            "Weekly",
+            PaymentMethod.Card,
+            [
+                new(DayOfWeek.Monday, "OS-04", new(12, 0), new(20, 0)),
+                new(DayOfWeek.Tuesday, "OS-04", new(12, 0), new(20, 0), CancelledEveryOtherWeek: true),
+                new(DayOfWeek.Wednesday, "OS-04", new(12, 0), new(20, 0)),
+                new(DayOfWeek.Thursday, "OS-04", new(12, 0), new(20, 0)),
+                new(DayOfWeek.Friday, "OS-04", new(12, 0), new(20, 0)),
+                new(DayOfWeek.Friday, "MR-A", new(15, 0), new(17, 0)),
+            ]
+        ),
+    ];
 }
