@@ -3,9 +3,7 @@
 [![CI](https://github.com/MerihM/coworking-app/actions/workflows/ci.yml/badge.svg)](https://github.com/MerihM/coworking-app/actions/workflows/ci.yml)
 
 Information system for managing a coworking center: members, memberships, payments, rooms,
-workspaces, reservations and a manager report. Built from the design document
-*"Projektovanje informacionih sistema – IS za upravljanje coworking centrom"*
-(requirements FR01–FR12, NFR01–NFR05, business rules BR01–BR05, test cases TC01–TC08).
+workspaces, reservations and a manager report.
 
 **Stack:** ASP.NET Core Web API (C#, .NET 10) · Entity Framework Core 10 · PostgreSQL 18 ·
 React 19 + TypeScript · Mantine UI · Docker (database) · GitHub Actions (CI)
